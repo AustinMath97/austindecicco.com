@@ -1,0 +1,112 @@
+#OK to post homework
+#Austin DeCicco, 1/25/26, Assignment 1
+
+Help:=proc(): print("NuFP(pi::[1,...,n]), WtE(n::integer,x::symbol), OurPermL(n)"):end:
+
+#4. [Optional (and very challenging) for novices, mandatory for experts] Write a procedure NuFP(pi) that inputs a permutation pi of {1,...,n},
+#    where n:=nops(pi) and outputs the number of places i from 1 to n, where pi[i]=i. For example NuFP([2,1,3,5,4])=1.
+
+#Initializing procedure
+
+NuFP:=proc(pi::list):
+local n, total, i:
+
+#Defining locals
+
+n:=nops(pi):
+total:=0:
+
+#Checking input
+
+if type(pi,list)=false then return("NuFP([pi]) invalid input: pi must be a list of integers");
+end if;
+for i from 1 to n do
+if type(pi[i],integer)=false then return("NuFP([pi]) invalid input: pi must be a list of integers");
+end if;
+
+#Tallying pi[i]=i's
+
+if pi[i]=i then total:=total+1;
+end if;
+end do;
+
+#Wrapping-up
+
+total;
+end proc:
+
+#5. Write a procedure WtE(n,x) that inputs a non-negative integer and a variable x and outputs the sum of xNuFP(pi)
+#   summed over all permutations of length n. For which k , 0 <= k <= 5, are the following sequences in the OEIS,
+#   and what are their A number? (if thye exist) [seq(coeff(WtE(i,x),x,k),i=0..8)].
+
+#Initializing procedure
+
+WtE:=proc(n::integer,x::symbol):
+local frac, perm::list, i, j, order::list, total:
+
+#Checking inputs
+
+if type(n,integer)=false then return("WtE(n,x) invalid input: n must be an integer");
+end if;
+if n<0 then return("WtE(n,x) invalid input: n must be non-negative");
+end if;
+if type(x,symbol)=false then return("WtE(n,x) invalid input: x must be a variable (symbol)");
+end if;
+
+#Defining locals
+
+perm:=combinat:-permute([seq(i, i=1..n)]):
+frac:=nops(perm):
+total:=0:
+order:=[]:
+
+#Summation
+
+for j from 1 to frac do
+order:=perm[j]:
+total:=total+x^NuFP(order):
+end do;
+
+#Wrapping-up
+
+total;
+end proc:
+
+#Generating sequences to look-up
+for k from 0 to 5 do
+[seq(coeff(WtE(i,x),x,k),i=0..8)];
+end do;
+
+#Listing k-values and A-numbers after manual cross-reference
+#k=0, A=000166, and 12 others
+#k=1, A=182390
+#k=2, A=000387,145221
+#k=3, A=N/a
+#k=4, A=N/a
+#k=5, A=N/a
+
+#6. [Optional Challenge, $5 dollars to be divided] Fix procedure MyPermL(n) so that it gives the same output (in that order) as Maple's built-in permute(n).
+
+#Initializing procedure
+
+OurPermL:=proc(n) local S,s,i,NewS:
+option remember:
+if n=0 then
+RETURN([[]]);
+end if;
+
+#Defining locals
+
+S:=OurPermL(n-1):
+NewS:=[]:
+
+for s in S do
+for i from 1 to n do
+NewS:=[op(NewS),[op(1..i-1,s),n,op(i..n-1,s)]];
+end do;
+end do;
+
+#I tried for awhile to get a proper ordering and could not do it recursively, however I discussed the sort() function "\_(o.o)_/"
+
+sort(NewS);
+end proc:

@@ -1,0 +1,331 @@
+#OK to post homework
+#Austin DeCicco, 2/7/26, Assignment 4
+
+Help:=proc():
+print("a(n), b(n), IncSeqs1(n,k,a), IncSeqs(n,k), Contain1(pi,sig), Contain(pi,S), AvoidPer(n,S), redu(L), SubSeq3(L), Contain3(pi,sig), Contain3S(pi,S)"):
+end proc:
+
+#BEGIN REFORMATTED C4
+############################################################################################################################################################
+
+#IncSeqs1(n,k,a): The set of increasing sequences of length k of integers that ends with a
+
+IncSeqs1:=proc(n,k,a) option remember:
+local S, b, S1, s1:
+if not type(n,integer) and type(k,integer) and k<=n and k>=1 and a<=n and n>=1 then
+return(FAIL);
+end if;
+if k=1 then
+return({[a]});
+end if;
+S:={}:
+
+#a-1-(k-1)+1=a-k
+
+for b from k-1 to a-1 do
+S1:=IncSeqs1(n,k-1,b):
+
+# Append a to the list s1: [op(s1),a]
+
+S:=S union {seq([op(s1),a],s1 in S1)}:
+end do;
+S;
+end proc:
+
+#IncSeqs(n,k): The set of increasing sequences of length k from the integers 1 to n
+
+IncSeqs:=proc(n,k):
+local a:
+{seq(op(IncSeqs1(n,k,a)),a=k..n)};
+end proc:
+
+#Contain1(pi,sig): Does the permutation pi contain the pattern sig?
+
+Contain1:=proc(pi,sig):
+local n, k, S, s, i1:
+n:=nops(pi):
+k:=nops(sig):
+S:=IncSeqs(n,k):
+for s in S do
+
+#here we are looking at all the places in pi from each s1 for example if s=[1,4,9] and n=10, k=3 then we look at 
+#pi[1]pi[4]pi[9] and see if it reduces to sig then return true
+
+if redu([seq(pi[s[i1]],i1=1..k)])=sig then
+return(true);
+end if;
+end do;
+false;
+end proc:
+
+#Contain(pi,S): does pi contain at least one of the patterns in S?
+
+Contain:=proc(pi,S):
+local sig:
+for sig in S do
+if Contain1(pi,sig) then
+return true;
+end if;
+end do;
+false;
+end proc:
+
+#AvoidPer(n,S): the permutations of length n that avoid the patterns in S1
+
+AvoidPer:=proc(n,S) option remember:
+local G, G1, i, pi1, pi:
+if n=0 then
+return({[]});
+end if;
+
+#G is the set with good permutations (avoiding the patterns in S)
+
+G:={}:
+G1:=AvoidPer(n-1,S):
+
+#i is the location of n
+
+for i from 1 to n do
+for pi1 in G1 do
+pi:=[op(1..i-1,pi1),n,op(i..n-1,pi1)]:
+if not Contain(pi,S) then
+G:=G union {pi};
+end if;
+end do;
+end do;
+G;
+end proc:
+
+#This is still open: Why is it that it is all integers up to n=17
+
+a:=proc(n) option remember:
+local i:
+if n=1 then
+2;
+else
+add(a(i)^2,i=1..n-1)/(n-1);
+end if;
+end proc:
+
+b:=proc(n) option remember:
+if n>=1 and n<=4 then
+1;
+else
+(b(n-1)*b(n-3)+b(n-2)^2)/b(n-4);
+end if;
+end proc:
+
+with(combinat):
+
+#redu(L): inputs a list of distinct numbers and outputs its reduction according to their order
+#For example redu([5,9,1]): [2,3,1]
+#redu([Pi,e])=[2,1]
+#redu([phi,sqrt(2),10])= [2,1,3]
+
+redu:=proc(L):
+local n, L1, T, i:
+n:=nops(L):
+L1:=sort(L):
+for i from 1 to n do
+T[L1[i]]:=i:
+end do;
+[seq(T[L[i]],i=1..n)];
+end proc:
+
+#SubSeqs3(L): The set of subsequences of the list L of length 3. For example
+#SubSeqs3([1,6,2,4])={[1,6,2],[1,6,4],[1,2,4],[6,2,4]}
+
+SubSeqs3:=proc(L):
+local n, i1, i2, i3, S:
+n:=nops(L):
+S:={}:
+for i1 from 1 to n do
+for i2 from i1+1 to n do
+for i3 from i2+1 to n do
+S:=S union {[L[i1],L[i2],L[i3]]}:
+end do;
+end do;
+end do;
+S;
+end proc:
+
+#Contain3(pi,sig): does the permutation pi contain the pattern sig?
+#Contain3([2,1,3,4],[1,2,3]) returns true Contain3([4,3,2,1],[1,2,3]) returns false
+
+Contain3:=proc(pi,sig):
+local n, S, s:
+n:=nops(pi):
+if nops(sig)<>3 then
+RETURN(FAIL);
+end if;
+S:=SubSeqs3(pi):
+for s in S do
+if redu(s)=sig then
+return(true);
+end if;
+end do;
+false;
+end proc:
+
+#AvoidPer1(n,sig): inputs a pos. integer n and a pattern of length 3 outputs the subset of permute(n) that avoid the parttern sig
+
+AvoidPer1:=proc(n,sig) local A,pi,G:
+A:=permute(n):
+G:={}:
+for pi in A do
+if not Contain3(pi,sig) then
+G:=G union {pi};
+end if;
+end do;
+G;
+end proc:
+
+Contain3S:=proc(pi,S):
+local sig:
+for sig in S do
+if Contain3(pi,sig) then
+return true;
+end if;
+end do;
+false;
+end proc:
+
+AvoidPer3:=proc(n,S):
+local A, pi:
+A:={}:
+for pi in permute(n) do
+if not Contain3S(pi,S) then
+A:=A union {pi};
+end if;
+end do;
+A;
+end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C4
+
+#3. Type the following 10 times, after reading C4.txt, S:={seq(randperm(3),i=1..3)}; [seq(nops(AvoidPer(n,S)),n=1..8)]; how many of then are in the OEIS?
+#   For those that are not in the OEIS, can you conjecture a formula?
+
+p3:=proc():
+local n, i, S, j, T:
+T:={}:
+for j from 1 to 30 do
+S:={seq(randperm(3),i=1..3)}:
+if not S in T then
+T:= T union {S};
+print (S,[seq(nops(AvoidPer(n,S)),n=1..8)]);
+end if;
+end do;
+end proc:
+
+#p3();
+
+#My output, ran 30 times with repeated entries omitted
+#1. {[1, 2, 3], [2, 3, 1], [3, 1, 2]}, [1, 2, 3, 4, 5, 6, 7, 8]           Formula: n                    OEIS: A000027
+#2. {[1, 2, 3], [3, 1, 2], [3, 2, 1]}, [1, 2, 3, 1, 0, 0, 0, 0]           Conjectured Formula: Same as 15 with extra avoidance
+#3. {[2, 1, 3], [3, 1, 2]}, [1, 2, 4, 8, 16, 32, 64, 128]                 Formula: 2^(n-1)              OEIS: A000079
+#4. {[1, 3, 2], [2, 3, 1], [3, 1, 2]}, [1, 2, 3, 4, 5, 6, 7, 8]           Formula: n                    OEIS: A000027
+#5. {[1, 2, 3], [1, 3, 2], [2, 3, 1]}, [1, 2, 3, 4, 5, 6, 7, 8]           Formula: n                    OEIS: A000027
+#6. {[2, 1, 3], [2, 3, 1], [3, 1, 2]}, [1, 2, 3, 4, 5, 6, 7, 8]           Formula: n                    OEIS: A000027
+#7. {[2, 3, 1], [3, 1, 2]}, [1, 2, 4, 8, 16, 32, 64, 128]                 Formula: 2^(n-1)              OEIS: A000079
+#8. {[1, 3, 2], [3, 2, 1]}, [1, 2, 4, 7, 11, 16, 22, 29]                  Formula: a(n+1)=a(n)+n        OEIS: A000124
+#9. {[1, 3, 2], [3, 1, 2], [3, 2, 1]}, [1, 2, 3, 4, 5, 6, 7, 8]           Formula: n                    OEIS: A000027
+#10. {[2, 1, 3], [3, 2, 1]}, [1, 2, 4, 7, 11, 16, 22, 29]                 Formula: a(n+1)=a(n)+n        OEIS: A000124
+#11. {[2, 1, 3], [2, 3, 1], [3, 2, 1]}, [1, 2, 3, 4, 5, 6, 7, 8]          Formula: n                    OEIS: A000027
+#12. {[2, 3, 1], [3, 2, 1]}, [1, 2, 4, 8, 16, 32, 64, 128]                Formula: 2^(n-1)              OEIS: A000079
+#13. {[2, 3, 1]}, [1, 2, 5, 14, 42, 132, 429, 1430]                       Formula: (2n)!/(n!(n+1)!)     OEIS: A000108
+#14. {[1, 2, 3], [2, 1, 3], [3, 1, 2]}, [1, 2, 3, 4, 5, 6, 7, 8]          Formula: n                    OEIS: A000027
+#15. {[1, 2, 3], [3, 2, 1]}, [1, 2, 4, 4, 0, 0, 0, 0]                     Conjectured Formula: Fails when allowing two entries on either side of an element
+#16. {[1, 3, 2], [2, 3, 1]}, [1, 2, 4, 8, 16, 32, 64, 128]                Formula: 2^(n-1)              OEIS: A000079
+#17. {[2, 3, 1], [3, 1, 2], [3, 2, 1]}, [1, 2, 3, 5, 8, 13, 21, 34]       Formula: a(n)=a(n-1)+a(n-2)   OEIS: A000045
+#18. {[1, 3, 2], [2, 1, 3], [3, 1, 2]}, [1, 2, 3, 4, 5, 6, 7, 8]          Formula: n                    OEIS: A000027
+#19. {[2, 1, 3], [2, 3, 1]}, [1, 2, 4, 8, 16, 32, 64, 128]                Formula: 2^(n-1)              OEIS: A000079
+#20. {[2, 1, 3], [3, 1, 2], [3, 2, 1]}, [1, 2, 3, 4, 5, 6, 7, 8]          Formula: n                    OEIS: A000027
+#21. {[1, 2, 3], [2, 3, 1]}, [1, 2, 4, 7, 11, 16, 22, 29]                 Formula: a(n+1)=a(n)+n        OEIS: A000124
+#22. {[1, 2, 3], [2, 3, 1], [3, 2, 1]}, [1, 2, 3, 1, 0, 0, 0, 0]          Conjectured Formula: Same as 15 with extra avoidance
+
+#Expanded reasoning/proof for 15:
+#Consider allowing two entries on either side of an element x, there are 3 interesting cases x = 1, 1 < x < n, n.
+#Let x = 1, then 2,3 can only be placed as such, (1,3,2), (2,1,3), (2,3,1), (3,1,2). Observe we already have [1,2] and [2,1] in all AvoidPer(3,{[1, 2, 3], [3, 2, 1]}), 
+#thus there is nowhere to place 4 on the ends to avoid a [1, 2, 3] or [3, 2, 1]. Therefore we must insert it internally into one of the two possible positions.
+#It is easy to check if '3' is the central value we cannot insert 4 anywhere as [1,2][2,1] "face" eachother, and we can only insert when they have thier "backs-turned",
+#i.e. [2,1][1,2], which forces the central value to be 1. This allows us to construct the whole set of AvoidPer(4,{[1, 2, 3], [3, 2, 1]}) using the seeds (2,1,3), (3,1,2).
+#(2,1,4,3), (2,4,1,3), (3,1,4,2), (3,4,1,2). Again we already have [1,2] and [2,1] in all, therefore end placements are ruled out. Internally, we see now that 4 has one
+#neighbor on either side, which is of course smaller than 4 and this leaves no place to put 5 without forming a [1, 2, 3] or [3, 2, 1].
+#Let x = n follows a similar argument with n-1..n-4. For 1 < x < n, then there exists smaller and larger elements z=x-1 and y=x+1. WLOG say z,x then we are forced to place
+#y s.t. z,y,x or y,z,x. Now consider two new elements a,b to the other side. WLOG we get (z,y,x,a,b) or (y,z,x,a,b).
+#Observe we already have [1,2] and [2,1] in z,y,x, thus we can't have b>x or z,x,b is a [1,2,3] and we can't have b<x or y,x,b is a [3,2,1].
+#Observe we already have [1,2] and [2,1] in y,z,x, thus we can't have b>x or z,x,b is a [1,2,3] and we can't have b<x or y,x,b is a [3,2,1].
+#Therefore there exists no permutations of length > 4 that avoid [1, 2, 3], [3, 2, 1]. QED
+
+#4. Type the following 10 times, after reading C4.txt, S:={seq(randperm(3),i=1..2), seq(randperm(4),i=1..4)}; [seq(nops(AvoidPer(n,S)),n=1..7)];
+#   how many of then are in the OEIS? For those that are not in the OEIS, can you conjecture a formula?
+
+p4:=proc():
+local n, i, S, j, T:
+T:={}:
+for j from 1 to 10 do
+S:={seq(randperm(3),i=1..2), seq(randperm(4),i=1..4)}:
+if not S in T then
+T:= T union {S};
+print (S,[seq(nops(AvoidPer(n,S)),n=1..7)]);
+end if;
+end do;
+end proc:
+
+#p4();
+
+#My output, ran 10 times with repeated entries omitted
+#1. {[2, 1, 3], [3, 1, 2], [1, 2, 3, 4], [2, 1, 4, 3], [3, 4, 2, 1], [4, 1, 2, 3]}, [1, 2, 4, 6, 6, 6, 6]
+#2. {[3, 2, 1], [1, 2, 4, 3], [2, 4, 1, 3], [3, 1, 4, 2], [3, 2, 4, 1]}, [1, 2, 5, 11, 20, 32, 47]
+#3. {[2, 1, 3], [3, 2, 1], [2, 3, 1, 4], [2, 3, 4, 1], [4, 2, 3, 1]}, [1, 2, 4, 6, 8, 10, 12]
+#4. {[1, 2, 3], [1, 3, 2], [1, 2, 3, 4], [1, 2, 4, 3], [4, 2, 3, 1]}, [1, 2, 4, 7, 11, 16, 22]
+#5. {[1, 2, 3], [2, 3, 1], [1, 4, 2, 3], [2, 3, 4, 1], [4, 2, 3, 1]}, [1, 2, 4, 7, 11, 16, 22]
+#6. {[1, 3, 2], [2, 1, 3], [1, 2, 4, 3], [2, 3, 1, 4], [2, 3, 4, 1], [3, 4, 2, 1]}, [1, 2, 4, 6, 8, 10, 12]
+#7. {[1, 3, 2], [2, 3, 1], [2, 1, 3, 4], [4, 2, 3, 1], [4, 3, 1, 2], [4, 3, 2, 1]}, [1, 2, 4, 5, 3, 3, 3]
+#8. {[1, 2, 3], [3, 1, 2], [2, 1, 3, 4], [2, 4, 1, 3], [3, 1, 2, 4], [4, 3, 2, 1]}, [1, 2, 4, 6, 3, 1, 0]
+#9. {[1, 3, 2], [2, 3, 1], [2, 1, 3, 4], [3, 2, 1, 4], [3, 4, 2, 1], [4, 2, 3, 1]}, [1, 2, 4, 6, 8, 10, 12]
+#10. {[1, 3, 2], [3, 1, 2], [3, 2, 4, 1], [4, 1, 3, 2], [4, 2, 3, 1], [4, 3, 1, 2]}, [1, 2, 4, 7, 11, 16, 22]
+
+#1.  OEIS: A296511
+#2.  OEIS: A139482
+#3.  OEIS: A004275
+#4.  Formula: n(n-1)/2 + 1       OEIS: A000124
+#5.  Formula: n(n-1)/2 + 1       OEIS: A000124
+#6.  OEIS: A004275
+#7.  Conjectured Formula: With length > 4, the only allowed permutations are (1..n), (n-1, 1..n-2, n), and (n, 1..n-1).
+#8.  Conjectured Formula: Upper bound a(n+1)=a(n)+n by perm(3)'s. Only one of the perm(4)'s don't contain a perm(3) pattern. This explains up to 1, 2, 4, 6.
+#    Empty at n>=7 for similar reasons as before, with n>= for perm(3) avoidances in problem 3. I.e. there exists no valid configurations of an element with three elements
+#    either side. This can be expanded to conjecture there exists combinations of pattern length 5 avoidances that produce empty sets at n>=9. It is what it is for n=5,6.
+#9.  OEIS: A004275
+#10. Formula: n(n-1)/2 + 1       OEIS: A000124
+
+#5. [Optional challenge, OK to cheat, 5 dollars]. Find out the name of the sequence b(n) in C4.txt, and search the internet for a proof that, unlike a(n),
+#   b(n) is always an integer. Write it in your own words, and be able to present it to the class.
+
+#Somos-4 sequence, OEIS: A006720
+
+#6. [Challenge, I have no clue] Why are a(n) integers for n up n=16
+
+#x^2 mod n = (x mod n)^2 mod n
+
+#7. [Optional Challenge, 5 dollars]. By glancing at AvoidPer(n,{[1,3,2]}) for small n, and looking at the location of n and what comes before and what comes after,
+#   prove that if a(n) is the number of permutations of length n avoiding the pattern 132, it satisfies the non-linear recurrence a(n)=Sum(a(k)*a(n-1-k),k=0..n-1).
+#   Use this recurrence (with option remember) to crank-out many terms, and conjecture an explicit formula.
+
+#AvoidPer(3,{[1,3,2]});
+#AvoidPer(4,{[1,3,2]});
+#AvoidPer(5,{[1,3,2]});
+
+#Assume a(n)=Sum(a(k)*a(n-1-k),k=0..n-1) holds for n, consider n+1. Define a(0)=1, a(1)=1, a(2)=2. Then a(3)=a(0)*a(2)+a(1)*a(1)+a(2)*a(0)=2+1+2=5 as desired.
+#a(n+1)=Sum(a(k)*a(n-k),k=0..n)=Sum(a(k)*a(n-k),k=1..n-1)+2*a(n)*a(0). 2*a(n)*a(0) can be explained by n+1 always playing the role of 3, thus it is always valid
+#to place n+1 in the front or back of a element of AvoidPer(n,{[1,3,2]}). Sum(a(k)*a(n-k),k=1..n-1)=Sum(a(k)*a(n-k),k=2..n-2)+2*a(1)*a(n-1).
+#2*a(1)*a(n-1) can be thought of as trying to place n and n+1 in a AvoidPer(n-1,{[1,3,2]}) + trying to place 2..n+1 in a AvoidPer(1,{[1,3,2]}).
+#Trying to place 2..n+1 in a AvoidPer(1,{[1,3,2]}) is an equivalent 
+
+
+
+
+
+

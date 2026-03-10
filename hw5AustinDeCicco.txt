@@ -1,0 +1,334 @@
+#OK to post homework
+#Austin DeCicco, 2/8/26, Assignment 5
+
+Help:=proc():
+print("inv(pi), maj(pi), LtoR(pi), RF(x,n), WtE(S,f,x), FP(pi), Der(n), d(n) , ExtractCycle(pi,i) , CycDec(pi), redu(L), NumPat3(pi,sig), SubSeqs3(L)"):
+end proc:
+
+#BEGIN REFORMATTED C5
+############################################################################################################################################################
+
+with(combinat):
+
+#maj(pi): The major index : The sum of the places where pi[i]>pi[i+1]
+maj:=proc(pi):
+local n, i, co:
+co:=0:
+n:=nops(pi):
+for i from 1 to n-1 do
+if pi[i]>pi[i+1] then  
+co:=co+i;
+end if;
+end do;
+co;
+end proc:
+
+#inv(pi): The number of inversions of the permutation pi. For example inv([1,2,3])=0, inv([3,2,1])=3  
+
+inv:=proc(pi):
+local n, i, j, co:
+n:=nops(pi):
+co:=0:
+for i from 1 to n do 
+for j from i+1 to n do   
+if pi[i]>pi[j] then 
+co:=co+1;
+end if;
+end do;
+end do;
+co;
+end proc:
+
+#LtoR(pi): The list places that are larger than anything to the left pi=[2,1,4,3]
+LtoR:=proc(pi):
+local n, L, i, ma:
+n:=nops(pi):
+L:=[1]:
+#ma is the current world record
+ma:=pi[1]:
+for i from 2 to n do
+if pi[i]>ma then
+L:=[op(L), i ];
+ma:=pi[i];
+end if;
+end do;
+L;
+end proc:
+
+#x*(x+1)*...*(x+n-1)
+
+RF:=proc(x,n):
+local i:
+mul(x+i,i=0..n-1);
+end proc:
+
+#WtE(S,f,x): add(x^f(s), s in S)
+
+WtE:=proc(S,f,x):
+local s:
+add(x^(f(s)), s in S);
+end proc:
+
+#FP(pi): The number of fixed points of per. pi
+
+FP:=proc(pi):
+local n, i,co:
+n:=nops(pi):
+co:=0:
+for i from 1 to n do
+if pi[i]=i then
+co:=co+1;
+end if;
+end do;
+co;
+end proc:
+
+# Der(n): The set of derangements (i.e. permutations w/o fixed points) of {1, ..., n}
+
+Der:=proc(n):
+local S, pi, DE:
+S:=permute(n):
+DE:={}:
+for pi in S do
+if FP(pi)=0 then 
+DE:=DE union {pi};
+end if;
+end do;
+DE;
+end proc:
+
+#d(n):=|Der(n)|
+
+d:=proc(n) option remember:
+if n=1 then
+0;
+else
+n*d(n-1)+(-1)^n;
+end if;
+end proc:
+
+#ExtractCycle(pi,i): The cycle corresponding to the member i of the permutation pi. For example ExtractCycle([2,1,4,3],1)=[1,2]
+
+ExtractCycle:=proc(pi,i):
+local C, ng:
+C:=[i]:
+ng:=pi[i]:
+while ng<>i do
+C:=[op(C),ng]:
+ng:=pi[ng]:
+end do;
+C;
+end proc:
+
+#CycDec(pi): The full cyclic decomposition of pi
+
+CycDec:=proc(pi):
+local n, i, StillToDo, S, C, ng:
+n:=nops(pi):
+StillToDo:={seq(i,i=1..n)}:
+S:={}:
+while StillToDo<>{} do
+ng:=StillToDo[1]:
+C:=ExtractCycle(pi,ng):
+S:=S union {C}:
+StillToDo:=StillToDo minus {op(C)}:
+end do;
+S;
+end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C5
+
+#2. Conjecture an expression for the following quantity, once you have read C5.txt: factor(WtE(powerset(n),S->nops(S),x));
+#   by doing it for n=1,n=2,n=3,n=4, .... Note that this is the weight-enumerator of the set of substes of {1, ...,n} according to the weight S-> xNumberOfElementsOfS
+#   Can you prove it?
+
+#For reference, WtE(S,f,x): add(x^f(s), s in S)
+
+#(DELETE FOR OUTPUT)seq(factor(WtE(powerset(n),S->nops(S),x)),n=1..7);
+
+#Conjectured expression: WtE(powerset(n),S->nops(S),x)=(x+1)^n
+
+#Proof
+#Trivial for n=0,1. Suppose holds for n, consider n+1. WtE(powerset(n+1),S->nops(S),x) = WtE(powerset(n),S->nops(S),x) + WtE(powerset(n+1)\powerset(n),S->nops(S),x).
+#WtE(powerset(n+1),S->nops(S),x) = (x+1)^n + WtE(powerset(n+1)\powerset(n),S->nops(S),x). |powerset(n+1)\powerset(n)| = 2^(n+1)-2^n = 2^n.
+#Distrubition of |s| for s in powerset(n). 0: 1, 1: n, 2: n(n-1), i: n!/(n-i)!. By induction hypothesis sum i from 0 to n (x^i)*(n!/(n-i)!) = (x+1)^n.
+#Distrubition of |t| for t in powerset(n+1)\powerset(n). 0: 0, 1: 1, 2: n(n+1)-n(n-1) = 2n, 3: n(n+1)(n-1)-n(n-1)(n-2) = 3n(n-1), i: ((n+1)!/(n+1-i)!)-(n!/(n-i)!) = i*n!/(n+1-i)!
+#WtE(powerset(n+1),S->nops(S),x) = (x+1)^n + x + (2n)x^2 + 3n(n-1)x^3 + ... = 1 + nx + n(n-1)x^2 + ... + x + (2n)x^2 + 3n(n-1)x^3 + ... = 1 + (n+1)x + (n(n-1)+2n)x^2 + ... = 
+#1 + (n+1)x + (n+n^2)x^2 + ... = 1 + (n+1)x + n(n+1)x^2 + ... = (x+1)^(n+1) by induction. QED
+
+#3. Write a procedure NumPat3(pi,sig) that inputs a permutation pi of any length and a permutation sig of length 3 (if it is not the procedure should return FAIL) and by using redu (of C4.txt),
+#   a variable co that starts as 0, and a triple do-loop that adds 1 to co each time it finds a triple that reduces to sig, and outputs the number of occurrences of the pattern sig in pi.
+#   For example NumPat3([2,1,3,4],[1,2,3]); should output 2, since [pi[1],pi[3],pi[4]]=[2,3,4] and [pi[2],pi[3],pi[4]]=[1,3,4] reduce to 123, and none of the other triplets do.
+
+redu:=proc(L):
+local n, L1, T, i:
+n:=nops(L):
+L1:=sort(L):
+for i from 1 to n do
+T[L1[i]]:=i:
+end do;
+[seq(T[L[i]],i=1..n)];
+end proc:
+
+SubSeqs3:=proc(L):
+local n, i1, i2, i3, S:
+n:=nops(L):
+S:={}:
+for i1 from 1 to n do
+for i2 from i1+1 to n do
+for i3 from i2+1 to n do
+S:=S union {[L[i1],L[i2],L[i3]]}:
+end do;
+end do;
+end do;
+S;
+end proc:
+
+NumPat3:=proc(pi::list,sig::list):
+local S, co, s:
+if nops(sig)<>3 then
+return(FAIL);
+end if;
+if nops(pi)<3 then
+return(0);
+end if;
+co:=0;
+S:=SubSeqs3(pi):
+for s in S do
+if redu(s)=sig then
+co:=co+1;
+end if;
+end do;
+co;
+end proc:
+
+#NumPat3([2,1,3,4],[1,2,3]); outputs 2 as desired
+
+#4. Define L:=[seq(WtE(permute(n),pi->NumPat3(pi,[1,2,3]),x),n=1..7)]; (if you have patience, try to do instead L:=[seq(WtE(permute(n),pi->NumPat3(pi,[1,2,3]),x),n=1..8)];)
+#   For Which j=0,1,2,3,... are the following sequences are in the OEIS? What are they A numbers? (if they exist)
+#   [seq(coeff(L[i],x,j),i=1..nops(L))];
+
+p4:=proc():
+local L, i, j, n, x:
+L:=[seq(WtE(permute(n),pi->NumPat3(pi,[1,2,3]),x),n=1..8)];
+for j from 0 to 7 do
+print([seq(coeff(L[i],x,j),i=1..nops(L))]);
+end do;
+end proc:
+
+#p4();
+
+#My output for j=0..7
+#j=0, [1, 2, 5, 14, 42, 132, 429, 1430]    OEIS: A000108
+#j=1, [0, 0, 1, 6, 27, 110, 429, 1638]     OEIS: A115145
+#j=2, [0, 0, 0, 3, 24, 133, 635, 2807]     OEIS: A001089
+#j=3, [0, 0, 0, 0, 7, 70, 461, 2528]       OEIS: N/A
+#j=4, [0, 0, 0, 1, 9, 74, 507, 3008]       OEIS: N/A
+#j=5, [0, 0, 0, 0, 6, 54, 395, 2570]       OEIS: N/A
+#j=6, [0, 0, 0, 0, 0, 37, 387, 2864]       OEIS: N/A
+#j=7, [0, 0, 0, 0, 4, 32, 320, 2544]       OEIS: N/A
+
+#5. Repeat the above problem with the other five patterns of length 3, i.e. by replacing [1,2,3] by each of the following {[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]}
+
+p5:=proc(S::set):
+local L, i, j, n, x, s:
+for s in S do
+L:=[seq(WtE(permute(n),pi->NumPat3(pi,[1,2,3]),x),n=1..7)]:
+for j from 0 to 4 do
+print(s, [seq(coeff(L[i],x,j),i=1..nops(L))]);
+end do;
+end do;
+end proc:
+
+#p5({[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]});
+
+#My output for j=0..4
+#j=0, [1, 3, 2], [1, 2, 5, 14, 42, 132, 429]  OEIS: A000108
+#j=1, [1, 3, 2], [0, 0, 1, 6, 27, 110, 429]   OEIS: A115145
+#j=2, [1, 3, 2], [0, 0, 0, 3, 24, 133, 635]   OEIS: A001089
+#j=3, [1, 3, 2], [0, 0, 0, 0, 7, 70, 461]     OEIS: N/A
+#j=4, [1, 3, 2], [0, 0, 0, 1, 9, 74, 507]     OEIS: N/A
+#j=0, [2, 1, 3], [1, 2, 5, 14, 42, 132, 429]  OEIS: A000108
+#j=1, [2, 1, 3], [0, 0, 1, 6, 27, 110, 429]   OEIS: A115145
+#j=2, [2, 1, 3], [0, 0, 0, 3, 24, 133, 635]   OEIS: A001089
+#j=3, [2, 1, 3], [0, 0, 0, 0, 7, 70, 461]     OEIS: N/A
+#j=4, [2, 1, 3], [0, 0, 0, 1, 9, 74, 507]     OEIS: N/A
+#j=0, [2, 3, 1], [1, 2, 5, 14, 42, 132, 429]  OEIS: A000108
+#j=1, [2, 3, 1], [0, 0, 1, 6, 27, 110, 429]   OEIS: A115145
+#j=2, [2, 3, 1], [0, 0, 0, 3, 24, 133, 635]   OEIS: A001089
+#j=3, [2, 3, 1], [0, 0, 0, 0, 7, 70, 461]     OEIS: N/A
+#j=4, [2, 3, 1], [0, 0, 0, 1, 9, 74, 507]     OEIS: N/A
+#j=0, [3, 1, 2], [1, 2, 5, 14, 42, 132, 429]  OEIS: A000108
+#j=1, [3, 1, 2], [0, 0, 1, 6, 27, 110, 429]   OEIS: A115145
+#j=2, [3, 1, 2], [0, 0, 0, 3, 24, 133, 635]   OEIS: A001089
+#j=3, [3, 1, 2], [0, 0, 0, 0, 7, 70, 461]     OEIS: N/A
+#j=4, [3, 1, 2], [0, 0, 0, 1, 9, 74, 507]     OEIS: N/A
+#j=0, [3, 2, 1], [1, 2, 5, 14, 42, 132, 429]  OEIS: A000108
+#j=1, [3, 2, 1], [0, 0, 1, 6, 27, 110, 429]   OEIS: A115145
+#j=2, [3, 2, 1], [0, 0, 0, 3, 24, 133, 635]   OEIS: A001089
+#j=3, [3, 2, 1], [0, 0, 0, 0, 7, 70, 461]     OEIS: N/A
+#j=4, [3, 2, 1], [0, 0, 0, 1, 9, 74, 507]     OEIS: N/A
+
+#Same results as previous problem
+
+#6. [Optional challenge (5 dollars, no peeking)] Prove that for every positive integer n, WtE(permute(n),inv,x)=(1)(1+x)*(1+x+x^2)*...*(1+x+...+x^(n-1))
+#   [Hint: Construct the permutations of length n from those of length n-1 and inserting n in every-which-way, and depending on the location see how it increases the number of inversions)
+
+#Let i(perm(n)) but the number of inversions in a permutation of n. If we have a permutation of n-1 with i(perm(n-1)) = z and we insert n into position j to form a new permutation of n then
+#i(perm(n))=z+n-j. We have n ways of doing this to each permutation of n-1, making the total i(perm(n)) summed over all descendants of a permutation of n-1, sum j = 1 to n of z+n-j.
+#Now assume WtE(permute(n),inv,x)=(1)(1+x)*(1+x+x^2)*...*(1+x+...+x^(n-1)) holds for n, as it is trivial for n=1,2,3, consider n+1. 
+#WtE(permute(n+1),inv,x)=(1+x+...+x^n)*WtE(permute(n),inv,x), this formula is saying there's a way to add 0 to n more inversions to each permutation of n when forming a permutation of n+1.
+#The process for this is described above by inserting n+1 into the j-th position. QED
+
+#7. Optional Challenge (5 dollars, no peeking). Prove that for every positive integer factor(WtE(permute(n),pi->nops(CycDec(pi)),x))=x(x+1)(x+2)...(x+n-1)
+#   [Hint: Construct the permutations of length n from those of length n-1, given in cycle structure. Where can you stick the n w/o creating a new cycle?, adding the singleton cycle (n) increases the number by 1]
+
+#Assume WtE(permute(n),pi->nops(CycDec(pi)),x)=x(x+1)(x+2)...(x+n-1) holds for n, as it is trivial for n=1,2,3, consider n+1.
+#WtE(permute(n+1),pi->nops(CycDec(pi)),x)=(x+n)*WtE(permute(n),pi->nops(CycDec(pi)),x), this formula is saying there's 1 way to add 1 cycle when inserting n+1 into a permutation of n and n ways to add 0 cycles.
+#Similar to as I did in problem 6 of HW3, let's consider trying to place n+1 in a permutation of n. We could pick any of the n values in our permutation of n, call our selection x, we swap n+1 with x, x is now in (n+1)-th position
+#and n is in i-th, i may or may not be equal to x. It's important to note that any permutation of n+1 derived this way cannot be derived starting at a different permutation of n with the same process, i.e. this process is injective.
+#Trivially you could always reverse the process starting from a permutation of n+1, performing the reverse swaps, and deleteing n+1, to arrive a permutation of n.
+#If x was part of a cycle bigger than 1, say xy, then x is a part of a new cycle nxy. If x was part of a 1-cycle then nx is now a cycle. Thus we have constructed n ways to keep the amount of cycles the same.
+#We could of course always place n+1 in the (n+1)-th position, forming a new cycle, and also defining the last process needed to fully construct permutations(n+1) from permutations(n).
+#Therefore as hypothesized there's 1 way to add 1 cycle when inserting n+1 into a permutation of n and n ways to add 0 cycles.
+#Thus, WtE(permute(n+1),pi->nops(CycDec(pi)),x)=(x+n)*WtE(permute(n),pi->nops(CycDec(pi)),x). QED
+
+#8. Optional Challenge (5 dollars, no peeking). Prove that for every positive integer factor(WtE(permute(n),pi->nops(LtoR(pi)),x))=x(x+1)(x+2)...(x+n-1)
+#   Hint: Construct the permutations of length n from those of length n-1, by adding 1 to all the entries, and sticking 1 in every-which place. In most places it does not change the number of Left-To-Right maxima,
+#   but in one place it does. Which one?
+
+#Assume WtE(permute(n),pi->nops(LtoR(pi)),x)=x(x+1)(x+2)...(x+n-1) holds for n, as it is trivial for n=1,2,3, consider n+1.
+#WtE(permute(n+1),pi->nops(LtoR(pi)),x)=(x+n)*WtE(permute(n),pi->nops(LtoR(pi)),x), this formula is saying there's 1 way to add 1 maxima when inserting n+1 into a permutation of n and n ways to add 0 maxima.
+#These are equivalent statements to saying there's 1 way to add 1 maxima when inserting 1 into a permutation of n transformed by x=x+1 for all x in perm(n) and n ways to add 0 maxima.
+#There are n+1 possible choices in positions to insert 1, if the hypothesis is correct only 1 of these contributes a new maxima. Trivially if we add 1 to the first position it must make a new maxima while
+#the term in the second position will also stay a maxima as everything is greater than 1 in the permutation, thus we have added one new maxima. If we insert 1 anywhere else but the first position it could
+#never create a new maxima as again everything is greater than 1. Thus, WtE(permute(n+1),pi->nops(LtoR(pi)),x)=(x+n)*WtE(permute(n),pi->nops(LtoR(pi)),x). QED
+
+#9. [Optional challenge, 25 dollars w/o "peeking", 10 dollars, by looking it up, understanding the proof, and being able to present it to the class]
+#   Prove, that for every pos. integer n, WtE(permute(n),maj,x)=(1)(1+x)*(1+x+x^2)*...*(1+x+...+x^(n-1))
+
+#Done without peeking
+
+#Assume WtE(permute(n),maj,x)=(1)(1+x)*(1+x+x^2)*...*(1+x+...+x^(n-1)) holds for n, as it is trivial for n=1,2,3, consider n+1.
+#WtE(permute(n+1),maj,x)=(1+x+...+x^n)*WtE(permute(n),maj,x), this formula is saying there's a way to add 0 to n to each major index of each permutation of n when forming a permutation of n+1.
+#Trivially adding n+1 at the end never increases the major index. Let's find a method to add n to the index. If you place n+1 in the n-th position you add n to the major index, however you could
+#destroy a major from the (n-1)-th to the n-th, making the possible contribution n or 1 to the major index. If you contributed n, then we're done, if you contributed 1, then try adding n+1 to the (n-1)-th,
+#Change in major index = n-1 + 1 = n however you could again destroy a major from (n-2)-th to (n-1)-th making the total contribution n or 2. Following this logic all the way to it's conclusion we see the only
+#permutation of n that could get us there is the lexicographically backwards permutation n,n-1,...,2,1 and by inserting n+1 into the first position we add 1 to the major index + n-1 from the shifting up 1 of n-1
+#other majors. Thus the contribution is now n and we have a way of contributing n into the major index of any permutation of n by inserting n+1, additionally we have derived a way to contribute any number 0..n
+#to the lexicographically backwards permutation of n. Can we now find a method to add n-1 to the index of any permutation of n by inserting n+1? The most obvious thing to try is to place n+1 in the (n-1)-th,
+#As we've seen before this has outcomes: Change in major index = n,2 plus another two outcome where there was no major from (n-1)-th to n-th, Change in major index = n-1,1.
+#This shows we can add 1 to the major index of of any permutation of n by inserting n+1 after the last major. Similarily we can add x to the major index of of any permutation of n by inserting n+1
+#after the x-th to last major. So if a permutation of n has x majors, we now have construction methods to add 0 to x to the major index or n, all reliably. Going back to finding a method to add n-1 to the index
+#of any permutation of n by inserting n+1. We add n-1 to the major index by inserting n+1 into the (n-1)-th if (n-2)-th and (n-1)-th weren't majors.
+#Suppose (n-1)-th is a major, (n-2)-th is not, then put n+1 in (n-2)-th, if (n-3)-th was a major, then put n+1 in the (n-3)-th, etc... The result is a contribution of n-1.
+#Suppose (n-2)-th is a major, (n-1)-th is not, then put n+1 in (n-2)-th, if (n-3)-th was a major, then put n+1 in the (n-3)-th, etc... The result is a contribution of n-1.
+#Suppose both are majors, if (n-3)-th was a not major, then put n+1 in the (n-3)-th, otherwise continue working left until you find the first non-major. If all majors palce it in position 2.
+#Using similar processes we can find a way to contribute any number y from 0 to n to the major index by trying to insert at position y and adjusting to the left or right based on location of the majors,
+#moreover we can see each choice of the n+1 possible positions to place n+1 each has a unique contribution to the increase of the major index from 0 to n and thus we get that there's a way to add 0 to n to
+#each major index of each permutation of n when forming a permutation of n+1, therefore WtE(permute(n+1),maj,x)=(1+x+...+x^n)*WtE(permute(n),maj,x). QED
+
+
+
+

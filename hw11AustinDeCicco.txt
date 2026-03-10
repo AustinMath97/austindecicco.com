@@ -1,0 +1,137 @@
+#OK to post homework
+#Austin DeCicco, 3/1/26, Assignment 11
+
+#BEGIN REFORMATTED C10
+############################################################################################################################################################
+
+with(combinat):
+
+#xnk(n,k): The solution of the recurrence  xn(n)=(1+add(xn(i)^2,i=0..n-1))/n: From Austin DeCicco and others
+xnk:=proc(n,k) option remember: local i: if n=0 then 1; else (1+add(xnk(i,k)^k,i=0..n-1))/n; end if; end proc:
+
+#xnkC(n,k): clever version of xn(n) only having to remember what happened yesterday From Austin DeCicco and others
+xnkC:=proc(n,k) option remember: if n=1 then 2; else (xnkC(n-1,k)^(k-1)+n-1)*xnkC(n-1,k)/n; end if; end proc:
+
+#xnkP(n,k,p): For a prime p, a fast way to compute xnk(n,k) mod p for n<p, as long as it is an integer From Austin DeCicco and others
+xnkP:=proc(n,k,p) option remember: if n=1 then 2; else (xnkP(n-1,k,p)^(k-1)+n-1)*xnkP(n-1,k,p)*n^(-1) mod p; end if; end proc:
+
+#AD(k): Inspired by Austin DeCicco: the first term of the sequence xnk(n,K) that is NOT an integer
+AD:=proc(k): local i, ip: ip:=ithprime: for i from 1 to 1000 while (xnkP(ip(i) - 1,k,ip(i))^(k-1)+ip(i) - 1)*xnkP(ip(i) - 1,k,ip(i)) mod ip(i)=0 do end do; ip(i); end proc:
+
+#Comps(n): The set of compositions of n. For example, Comps(3) is {[3],[1,2],[2,1],[1,1,1]}.
+Comps:=proc(n) option remember: local S, i, S1, s1: if n<0 then RETURN({}); end if; if n=0 then RETURN({[]}); end if; S:={}: for i from 1 to n do
+S1:=Comps(n-i): S:=S union {seq([i,op(s1)],s1 in S1)}: end do; S; end proc:
+
+#CompsG(n,A): The set of compositions of n whose entries are from the set A
+CompsG:=proc(n,A) option remember: local S, i, S1, s1: if n<0 then RETURN({}); end if; if n=0 then RETURN({[]}); end if; S:={}: for i in A do
+S1:=CompsG(n-i,A): S:=S union {seq([i,op(s1)],s1 in S1)}: end do; S; end proc:
+
+#ParS(n): The set of partitions of n, done stupidly, by first finding Comps(n) and then sorting them
+ParS:=proc(n): local S, s: S:=Comps(n): {seq(sort(s, `>`), s in S)}; end proc:
+
+#Park(n,k): The set of partitions of n into exactly k parts
+Park:=proc(n,k) option remember: local S, k1, S1, s1: if n<k then RETURN({}); end if; if k=0 then if n=0 then RETURN({[]}); else RETURN({}); end if; end if;
+S:={}: for k1 from 0 to k do S1:=Park(n-k,k1): S:= S union {seq([op(s1+[1$k1]),1$(k-k1)], s1 in S1)}: end do; S; end proc:
+
+#Par(n): The set of partitions of n, the clever way.
+Par:=proc(n): local k: {seq(op(Park(n,k)), k=1..n)}; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C10
+
+#BEGIN REFORMATTED C11
+############################################################################################################################################################
+
+#|A union B|=|A|+ |B|- |A Intersect B|
+
+#Def. Given two sets A and B the cartesian product {[a,b], a in A and b in B]}
+#CP({[1,2],[4,5]},{[5,6],[6,7]})= {[[1,2],[4,5]]}, ...
+#ListTools[Flattern])([[1,3],[4,5]]);
+
+#CP(A,B): the Cartesian product of two sets (possibly given as lists)
+CP:=proc(A,B): local a, b: {seq(seq([op(a),op(b)],a in A), b in B )}; end proc:
+
+#WtE(A,x): The sum of x^a in A
+WtE:=proc(A,x): local a: add(x^convert(a,`+`), a in A); end proc:
+
+#PowA(A,n): The Cartesian product of A with itself n times
+PowA:=proc(A,n): if n=1 then RETURN(A); end if; CP(PowA(A,n-1),A); end proc:
+
+#GenCompsGF(a,b,A,B,x): The rational function whose Taylor series is such that the coeff. of x^n is the EXACT number of compositions whose
+#parts all obey i mod a belongs to A, number of parts k obey k mod b belongs to B
+#GF of i mod a: x^i+x^(i+a)+ x^(i+2*a)+... =x^i/(1-x^a)
+GenCompsGF:=proc(a,b,A,B,x): local f, i, j: f:=add(x^i, i in A)/(1-x^a): normal(add(f^j, j in B)/(1-f^b)); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C11
+
+#1. Using procedure GenCompsGF(a,b,A,B,x), write a procedure CountNuCompsClever(a,b,A,B,N) that inputs the positive integers a and b and a subset A of {1, ..., a}
+#   and a subset B of {0, ...,b-1} and outputs the first N terms of the sequence enumerating compositions all whose parts have the property that i mod a belongs to A
+#   and the number of parts mod b belongs to B. In other words, a composition L qualifies if member(nops(L) mod b,B) is true and {seq(L[i] mod a, i=1..nops(L))} minus A={}
+#   Hint: To get the first N+1 coefficients, starting at n=0 of the Taylor coefficients around x=0 you use the Maple command [seq(coeff( taylor(f,x=0,N+3),x,i),i=0..N)]:
+
+CountNuCompsClever:=proc(a,b,A,B,N): local x, i:
+[seq(coeff(taylor(GenCompsGF(a,b,A,B,x),x=0,N+3),x,i),i=1..N)];
+end proc:
+
+#CountNuCompsClever(2,2,{1},{0},7);
+#Verified to be working
+
+#2. Write a procedure CountNuCompsStupid(a,b,A,B,N) That does the same thing but as follows: First write a procedure CountNuCompsStupid1(a,b,A,B,n), that finds the number of
+#   compositions of n that obeys the stated condition, but first using Comps(n) (there are 2n-1 of them, so you can go to n=16 easily), and for each of them, L, checks whether
+#   nops(L) mod b belongs to B, and all the members of L mod a belongs to A and collects them into a set and does nops.
+#   Check that CountNuCompsClever(a,b,A,B,15)=CountNuCompsStupid(a,b,A,B,15) for a=3, b=4, A={1,2}, B={0,3} ; a=2, b=3, A={1}, B={2}
+
+CountNuCompsStupid:=proc(a,b,A,B,N): local n, S, T, L, i, O:
+S:={}: T:={}: O:=[]:
+for n from 1 to N do
+S:=Comps(n):
+T:={}:
+for L in S do
+if member(nops(L) mod b,B) = true and {seq(L[i] mod a, i=1..nops(L))} minus A = {} then
+T:=T union {L};
+end if;
+end do;
+O:=[op(O),nops(T)]:
+end do;
+O;
+end proc:
+
+#evalb(CountNuCompsClever(3,4,{1,2},{0,3},15)=CountNuCompsStupid(3,4,{1,2},{0,3},15)); evalb(CountNuCompsClever(2,3,{1},{2},15)=CountNuCompsStupid(2,3,{1},{2},15));
+#Verified to working
+
+#3. [Optional challenge, 1 dollar for each occurrence in the OEIS, 2 dollars of the description there is not about compositions. Limit: 10 dollars]
+#   Find as many as possible choices of (a,b,A,B) such that CountNuCompsClever(a,b,A,B,20) is in the OEIS
+
+RandASubset:=proc(n): local i, S; S:={}: while S={} do for i from 1 to n do if rand(0..1)()=1 then S := S union {i}; end if; end do; end do; S; end proc:
+
+RandBSubset:=proc(n): local i, S; S:={}: while S={} do for i from 0 to n-1 do if rand(0..1)()=1 then S := S union {i}; end if; end do; end do; S; end proc:
+
+ABGen:=proc(n): local a, b, A, B, L, S: S:={}: for a from 1 to n do for b from 1 to n do L:=[a,b,RandASubset(a),RandBSubset(b)]: S:=S union {L}: end do; end do; S; end proc:
+
+P3:=proc(n): local s: for s in ABGen(n) do print(CountNuCompsClever(s[1],s[2],s[3],s[4],20),s): end do; end proc:
+
+#P3 prints n^2 sequences with a,b <= n and A,B uniform rand
+P3(10);
+
+#1. [2, 1, {1}, {0}] generates A000045 - Fibonacci numbers
+#2. [4, 1, {1, 2}, {0}] generates A005314 - For n = 0, 1, 2, a(n) = n; thereafter, a(n) = 2*a(n-1) - a(n-2) + a(n-3).
+#3. [4, 2, {1, 3}, {0, 1}] generates A000045 - Fibonacci numbers
+#4. [1, 3, {1}, {0}] generates A024495 - a(n) = C(n,2) + C(n,5) + ... + C(n, 3*floor(n/3)+2).
+#5. [1, 4, {1}, {2}] generates A038504 - Sum of every 4th entry of row n in Pascal's triangle, starting at "n choose 1".
+#6. [3, 3, {1}, {0, 1, 2}] generates A000930 - Narayana's cows sequence: a(0) = a(1) = a(2) = 1; thereafter a(n) = a(n-1) + a(n-3).
+#7. [1, 7, {1}, {0, 6}] generates A290994 - p-INVERT of (1,1,1,1,1,...), where p(S) = 1 - S^7.
+#8. [1, 3, {1}, {1}] generates A024493 - a(n) = C(n,0) + C(n,3) + ... + C(n,3[n/3]).
+#9. [1, 2, {1}, {1}] generates A011782 - Coefficients of expansion of (1-x)/(1-2*x) in powers of x.
+#10. [2, 4, {1, 2}, {1}] generates A038503 - Sum of every 4th entry of row n in Pascal's triangle, starting at "n choose 0".
+
+
+
+
+
+
+
+
+
+
+

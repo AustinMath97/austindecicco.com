@@ -1,0 +1,278 @@
+#OK to post homework
+#Austin DeCicco, 3/6/26, Assignment 12
+
+#BEGIN REFORMATTED C12
+############################################################################################################################################################
+
+with(combinat):
+
+#Park(n,k): The set of partitions of n into exactly k parts
+Park:=proc(n,k) option remember: local S, k1, S1, s1: if n<k then RETURN({}); end if; if k=0 then if n=0 then RETURN({[]}); else RETURN({}); end if; end if;
+S:={}: for k1 from 0 to k do S1:=Park(n-k,k1): S:= S union {seq([op(s1+[1$k1]),1$(k-k1)], s1 in S1)}: end do; S; end proc:
+
+#Par(n): The set of partitions of n, the clever way.
+Par:=proc(n): local k: {seq(op(Park(n,k)), k=1..n)}; end proc:
+
+#A41s(N): OEIS sequence A41 done stupidly (construct the actual set) and take the cardinality
+A41s:=proc(N): local n: [seq(nops(Par(n)),n=1..N)]; end proc:
+
+#A41ok(N): OEIS sequence A41 done much more efficiently using Euler's generating function Sum(p(n)*q^n,n=0..infinity)=Prod(1/(1-q^k), k=1..infinity)
+A41ok:=proc(N): local k, f, q: f:=mul(1/(1-q^k),k=1..N): f:=taylor(f,q=0,N+4): [seq(coeff(f,q,k),k=1..N)]; end proc:
+
+#EulerM(N,q): The truncation to 1^N of Prod(1-q^k, k=1..infinity)
+EulerM:=proc(N,q): local f, k: f:=mul(1-q^k,k=1..N): f:=taylor(f,q=0,N+1); end proc:
+
+#ConjP(N): The conjectured powers of the polynomial in EulerM
+ConjP:=proc(N): local j, L: L:=[]: for j from 1 to N while (3*j^2-j)/2<=N do L:=[op(L),(3*j^2-j)/2]: end do; for j from 1 to N while (3*j^2+j)/2<=N do
+L:=[op(L),(3*j^2+j)/2]: end do; sort(L); end proc:
+
+#EPTtest(N): testing Euler's pentagonal numbers (3*j^2+j)/2
+EPTtest:=proc(N): local q, j, f, g, k: f:=mul(1-q^k,k=1..N):
+g:=add((-1)^j*q^((3*j^2+j)/2), j=1..trunc(2*sqrt(N/3)+1))+add((-1)^j*q^((3*j^2-j)/2), j=1..trunc(2*sqrt(N/3)+1)): taylor(f-g,q=0,N+1); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C12
+
+#1. Write a procedure A41c(N) that inputs and outputs the same things as A41s(N) and A41ok(N), but using The recurrence
+#   p(n)=Sum((-1)^(j-1)*p(n-(3*j^2-j)/2,j=1..infinity)+Sum((-1)^(j-1)*p(n-(3*j^2+j)/2,j=1..infinity) with the convention
+#   that p(n)=0 if n is negative (so the above sums are only for j such that (3*j^2-j)/2 and (3*j^2+j)/2, respectively, are <=n
+#   [Hint: first write A41c1(n) to compute p(n), and use option remember) How does time(A41c(1000)) compare to time(A41ok(1000))?
+
+A41c1:=proc(n) option remember:
+local S, j, i:
+if n<0 then return 0; end if;
+if n=0 then return 1; end if;
+S:=0:
+for j from 1 to n do
+S:=S+((-1)^(j-1))*A41c1(n-(3*j^2-j)/2)+((-1)^(j-1))*A41c1(n-(3*j^2+j)/2):
+end do;
+S;
+end proc:
+
+A41c:= proc(N) option remember:
+local i;
+[seq(A41c1(i), i=1..N)];
+end proc:
+
+#time(A41c(1000)); returns .906 whereas
+#time(A41ok(1000)); returns 5.250
+
+#2. Read and understand the proof of the above recurrence (due to Euler, based on the Euler Pentagonal Theorem) given in
+#   Bressoud-Zeilberger gem, Program it in Maple
+
+p2:=proc(n,L):
+local m, t, i, j, K:
+K:=[]:
+t:=nops(L):
+m:=add(L[i],i=1..t):
+j:=(sqrt(1+24*abs(n-m))-1)/6:
+if type(j,integer) = false then j:=(-sqrt(1+24*abs(n-m))-1)/6; end if;
+if type(j,integer) = false then return "invalid n,L combo"; end if;
+if t + 3*j < L[1] then
+for i from 2 to t do
+K:=[op(K),L[i]+1]:
+end do;
+for i from 1 to L[1] - 3*j - t - 1 do
+K:=[op(K),1]:
+end do;
+else
+K:=[3*j + t - 1];
+for i from 1 to t do
+if L[i]-1 > 0 then
+K:=[op(K),L[i]-1];
+end if;
+end do;
+end if;
+K;
+end proc:
+
+#p2(21,[5,5,4,3,2]);
+#p2(21,[7,4,4,3,2,1]);
+
+#p2(21,[7,4,4,3,2]);
+#p2(21,[5,5,4,3,1,1,1,1]);
+
+#Output each other's lists as desired
+
+#3. Write procedures OddToDis(p) and DisToOdd(n) that implement Sylvester's bijection described in this gem
+
+OddToDis:=proc(pi) option remember:
+local r, i, L, S, n:
+r:=1:
+n:=nops(pi):
+L:=[]:
+if op(1,pi) = 1 then return [n]; end if;
+while r < n and op(r+1,pi) > 1 do
+r:=r+1:
+end do;
+L:=sort([(op(1,pi)-1)/2 + r - 1, (op(1,pi)-1)/2 + n],`>`):
+if r<>1 then
+S:=OddToDis([seq(op(i,pi)-2,i=2..r)]);
+L:=[op(L),op(S)];
+end if;
+L;
+end proc:
+
+#OddToDis([9,7,3]);
+#Verified to be working
+
+DisToOdd:=proc(pi) option remember:
+local r, i, L, S, n, m:
+L:=[]:
+if op(1,pi) < 1 then return []; end if;
+n:=nops(pi):
+if n=1 then return [1$op(1,pi)]; end if;
+if n mod 2 = 0 then r:=n/2;
+else r:=(n+1)/2; end if;
+m:=op(1,pi) - op(2,pi) - 1:
+L:=[2*(op(2,pi) - r + 1) + 1, op(DisToOdd([m]))]:
+if n > 2 then
+S:=DisToOdd([seq(op(i,pi),i=3..n)]);
+L:=sort([op(L),seq(op(i,S) + 2,i=1..nops(S))],`>`);
+end if;
+L;
+end proc:
+
+#Now to verify the inverse
+
+#From HW10
+OddParStupid:=proc(n): local P, p, S, check: S:={}: for P in Par(n) do check:=true: for p in P do
+if p mod 2 = 0 then check:=false; end if; end do; if check=true then S:=S union {P}; end if; end do; S; end proc:
+DistinctParStupid:=proc(n): local P, i, j, S, check: S:={}: for P in Par(n) do check:=true:
+for i from 1 to nops(P)-1 do for j from i+1 to nops(P) do if P[i]=P[j] then check:=false; end if;
+end do; end do; if check=true then S:=S union {P}; end if; end do; S; end proc:
+
+FunctionCheck:=proc():
+local check, SO, SD, SOC, SDC, o, d:
+SO:=OddParStupid(10): SOC:={}:
+SD:=DistinctParStupid(10): SDC:={}:
+check:=true:
+for o in SO do
+SOC:=SOC union {DisToOdd(OddToDis(o))}:
+end do;
+for d in SD do
+SDC:=SDC union {OddToDis(DisToOdd(d))}:
+end do;
+if SDC<>SD or SOC<>SO then check:=false; end if;
+check;
+end proc:
+
+#FunctionCheck();
+#This returns false, there is a problem with the recursive call that I've spent an hour on and can't figure out
+
+#4. [Optional challenge, 5 dollars, for each pair] Using A41c(N), try to find pairs of integers (A,B) such that for all n p(A*n+B) mod A=0
+#   How far can you verify it?
+
+#If A,B is a pair then so is A,(B+cA), as A*n+B+cA = A*(n+c)+B = A*n+B
+#Thus we only need to check for B<=A, trivially A>1
+#We can check if the first 4 terms of p(A*n+B) mod A are zero and to complile a hypothesized set of A,B's
+#then refine this smaller set by calculating 25 terms on only that set, this of course still does not prove for all n
+
+p4:=proc(x):
+local i, j, n, check, S:
+S:={}:
+for i from 2 to x do
+for j from 0 to i do
+check:=true:
+for n from 1 to 4 do
+if (A41c1(i*n+j) mod i) <> 0 then check:=false; end if;
+end do;
+if check = true then S:=S union {[i,j]}; end if;
+end do;
+end do;
+S;
+end proc:
+
+p42:=proc(x):
+local s, n, check, S, L:
+S:=p4(x):
+L:={}:
+for s in S do
+check:=true:
+for n from 5 to 25 do
+if (A41c1(s[1]*n+s[2]) mod s[1]) <> 0 then check:=false; end if;
+end do;
+if check = true then L:=L union {[s[1],s[2]]}; end if;
+end do;
+L;
+end proc:
+
+#p42(1000);
+
+#This output 32 combinations of (A,B) that can be used to generate 32 countably infinite sets of solutions of the form A,(B+cA)
+#[5, 4], [7, 5], [11, 6], [25, 24], [35, 19], [49, 19], [49, 33], [49, 40]
+#[49, 47], [55, 39], [77, 61], [121, 116], [125, 74], [125, 99], [125, 124]
+#[175,124], [245, 19], [245, 89], [245, 194], [245, 229], [275, 149], [385, 369]
+#[539, 138], [539, 215], [539, 292], [539, 523], [605, 479], [625, 599]
+#[847, 600], [875, 124], [875, 474], [875, 824]
+
+#Some observations of this set, for A1,A2 valid A's, there exists a B s.t. A1*A2,B is a valid A,B pair
+#It appears the prime factors of all A values are 5,7,11 and that all values of 5^a*7^b*11^c appear in A besides 1
+#Also for values of B, if you take the corresponding B value in [5, 4], [7, 5], [11, 6], ... and look at mod prime factors you'll see B mod 5 is always 4 if 5 is factor,
+#B mod 25 is always 24 if 25 is factor, and so on.
+
+#We can verify these terms further by manually rerunning the code over the set
+
+p43:=proc():
+local s, n, check, S, L:
+S:={[5, 4], [7, 5], [11, 6]}:
+L:={}:
+for s in S do
+check:=true:
+for n from 1 to 500 do
+if (A41c1(s[1]*n+s[2]) mod s[1]) <> 0 then check:=false; end if;
+end do;
+if check = true then L:=L union {[s[1],s[2]]}; end if;
+end do;
+L;
+end proc:
+
+#p43();
+#This shows [5, 4], [7, 5], [11, 6] hold up to 500 terms and it's reasonable to suspect they hold for all n
+
+#A mystery still remains why [25, 4], [25, 9], [25, 14], [25, 19] are not in the set of generators of the countably infinite sets of solutions
+#or why [5, 4], [7, 5], [11, 6] is a generating set for the set of generators
+
+#Finally we can use what we have observered to narrow candiates for A and B and re-search the solution space
+
+CandA:=proc(a,b,c):
+local S, i, j, k:
+S:={}:
+for i from 0 to a do
+for j from 0 to b do
+for k from 0 to c do
+S:=S union {5^i*7^j*11^k}:
+end do;
+end do;
+end do;
+S;
+end proc:
+
+p44:=proc(x,y,z):
+local a, b, j, n, m, check, S, A, K, k:
+K:=[[5, 4], [7, 5], [11, 6], [25, 24], [35, 19], [49, 47], [55, 39], [77, 61],
+[121, 116], [125, 124], [175,124], [245, 229], [275, 149], [385, 369],
+[539, 523], [605, 479], [625, 599], [847, 600], [875, 824]]:
+m:=nops(K):
+S:={}:
+A:=CandA(x,y,z):
+for a in A do
+for k from 0 to m-1 do
+if a mod K[m-k][1] = 0 then
+for j from 0 to a/K[m-k][1] - 1 do
+b:=j*K[m-k][1]+K[m-k][2]:
+check:=true:
+for n from 1 to 2 do
+if (A41c1(a*n+b) mod a) <> 0 then check:=false; end if;
+end do;
+if check = true then S:=S union {[a,b]}; end if;
+end do;
+break;
+end if;
+end do;
+end do;
+S;
+end proc:
+
+#p44(2,1,1);
+#Unfortunately higher values will not run in reasonable time as there is a bottle neck at A41c1, however I found 1 new potential generating pair, [1925, 1524]

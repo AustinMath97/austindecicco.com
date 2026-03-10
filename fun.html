@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <!-- Mobile scaling -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="description" content="Austin DeCicco - Side Projects">
+
+  <title>Side Projects - Austin DeCicco</title>
+
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      line-height: 1.6;
+      color: #222;
+
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)),
+        url("back.jpg");
+
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      padding: 0 15px;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      color: #111;
+    }
+
+    h2 {
+      margin-top: 30px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+      font-size: 1.6em;
+    }
+
+    h4.course-title {
+      margin-top: 25px;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    p {
+      margin-bottom: 12px;
+    }
+
+    ul {
+      padding-left: 20px;
+      margin-top: 6px;
+    }
+
+    footer {
+      margin-top: 40px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    a {
+      color: #0033cc;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+      color: #0055ff;
+    }
+
+    /* Transparent orange link style (used for back button) */
+    .orange-button {
+      display: inline-block;
+      padding: 8px 14px;
+      background: transparent;
+      border-radius: 6px;
+      border: 2px solid #e67e22;
+      color: #e67e22;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .orange-button:hover {
+      background: #ff9900;
+      color: white;
+      border-color: #ff9900;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+      text-decoration: none;
+    }
+
+    /* Project cards */
+    .project {
+      margin-bottom: 20px;
+      padding: 12px 14px;
+      border-left: 4px solid #bbb;
+      background: rgba(255, 255, 255, 0.65);
+      border-radius: 5px;
+      transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .project:hover {
+      border-left: 4px solid #0033cc;
+      background: rgba(255, 255, 255, 0.85);
+      transform: translateY(-1px);
+    }
+
+    .project a {
+      font-weight: bold;
+      font-size: 1.05em;
+    }
+
+    .project-desc {
+      margin-top: 6px;
+      font-size: 0.95em;
+      color: #444;
+    }
+
+    code {
+      background: #eee;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+
+    /* Smaller image on mobile */
+    @media (max-width: 480px) {
+      body {
+        padding: 0 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main>
+
+    <p><a class="orange-button" href="index.html">← Back to Home</a></p>
+
+    <h2>Side Projects</h2>
+
+    <p>Here is a collection of some of my side projects, some for aiding investments and coursework, some just for fun.</p>
+    <p>This is far from a comprehensive list, nor is it tailored to impress. I may upload more as I find the files.</p>
+    <p>Accuracy is not guaranteed, in fact, some inaccuracy is guaranteed. Not all projects are finished.</p>
+
+    <section>
+      <h2>Finished Projects</h2>
+    </section>
+
+    <h4 class="course-title">Maple Programs:</h4>
+
+    <div class="project">
+      <a href="OEIS.txt" target="_blank" rel="noopener noreferrer">Maple OEIS Search Function</a>
+
+      <div class="project-desc">
+
+        <p>
+          A Maple program that queries the Online Encyclopedia of Integer Sequences (OEIS)
+          to search for integer sequences directly from Maple. The function allows users
+          to input a sequence of numbers and retrieve possible OEIS matches automatically.
+        </p>
+
+        <p><strong>Notes:</strong></p>
+
+        <ul>
+          <li>Input must be sequences, not lists (see comments inside the file).</li>
+
+          <li>
+            If you receive the error:<br>
+            <code>Error, (in URL:-Get) protocol "https" not supported or disabled in libcurl</code><br>
+            update Maple to a newer version.
+          </li>
+
+          <li><strong>Verified Working:</strong> 3/9/2026</li>
+        </ul>
+
+      </div>
+    </div>
+
+    <h4 class="course-title">Java Programs:</h4>
+
+    <div class="project">
+      <a href="Graphing.java" target="_blank" rel="noopener noreferrer">Complete or Random Graph Visualizer</a>
+
+      <div class="project-desc">
+
+        <p>
+          A simple program to help visualize complete and random graphs of size n.
+        </p>
+
+        <p><strong>Notes:</strong></p>
+
+        <ul>
+          <li>Follow prompts in terminal after execution.</li>
+
+          <li>30 < n < 70 tends to generate the prettiest images.</li>
+
+          <li><strong>Verified Working:</strong> 3/9/2026</li>
+        </ul>
+
+      </div>
+    </div>
+
+    <section>
+      <h2>Unfinished Projects</h2>
+    </section>
+
+    <h4 class="course-title">Java Programs:</h4>
+
+    <div class="project">
+      <a href="RE_InvestmentCalc.java" target="_blank" rel="noopener noreferrer">A calculator for determining needed rent prices on prospective investment properties.</a>
+
+      <div class="project-desc">
+
+        <p>
+          A very basic pricing algorithm for rent pricing on prospective investment properties.
+          This calculator does NOT determine MARKET RENT PRICES, instead it determines what rent prices
+          you would have to achieve in order to capture a certain ROI considering initial and recurrent costs.
+        </p>
+
+        <p><strong>Notes:</strong></p>
+
+        <ul>
+          <li>Formatting for input is available on line 4.</li>
+
+          <li>While I could consider this a finished project, I intend to improve the model in the future.</li>
+
+          <li><strong>Verified Working:</strong> 3/9/2026</li>
+        </ul>
+
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>Built and Designed by Austin DeCicco</p>
+    <p>Last Updated: March 9, 2026</p>
+  </footer>
+
+</body>
+
+</html>

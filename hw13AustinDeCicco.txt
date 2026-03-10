@@ -1,0 +1,186 @@
+#OK to post homework
+#Austin DeCicco, 3/8/26, Assignment 13
+
+#BEGIN REFORMATTED C12
+############################################################################################################################################################
+
+with(combinat):
+
+#Park(n,k): The set of partitions of n into exactly k parts
+Park:=proc(n,k) option remember: local S, k1, S1, s1: if n<k then RETURN({}); end if; if k=0 then if n=0 then RETURN({[]}); else RETURN({}); end if; end if;
+S:={}: for k1 from 0 to k do S1:=Park(n-k,k1): S:= S union {seq([op(s1+[1$k1]),1$(k-k1)], s1 in S1)}: end do; S; end proc:
+
+#Par(n): The set of partitions of n, the clever way.
+Par:=proc(n): local k: {seq(op(Park(n,k)), k=1..n)}; end proc:
+
+#A41s(N): OEIS sequence A41 done stupidly (construct the actual set) and take the cardinality
+A41s:=proc(N): local n: [seq(nops(Par(n)),n=1..N)]; end proc:
+
+#A41ok(N): OEIS sequence A41 done much more efficiently using Euler's generating function Sum(p(n)*q^n,n=0..infinity)=Prod(1/(1-q^k), k=1..infinity)
+A41ok:=proc(N): local k, f, q: f:=mul(1/(1-q^k),k=1..N): f:=taylor(f,q=0,N+4): [seq(coeff(f,q,k),k=1..N)]; end proc:
+
+#EulerM(N,q): The truncation to 1^N of Prod(1-q^k, k=1..infinity)
+EulerM:=proc(N,q): local f, k: f:=mul(1-q^k,k=1..N): f:=taylor(f,q=0,N+1); end proc:
+
+#ConjP(N): The conjectured powers of the polynomial in EulerM
+ConjP:=proc(N): local j, L: L:=[]: for j from 1 to N while (3*j^2-j)/2<=N do L:=[op(L),(3*j^2-j)/2]: end do; for j from 1 to N while (3*j^2+j)/2<=N do
+L:=[op(L),(3*j^2+j)/2]: end do; sort(L); end proc:
+
+#EPTtest(N): testing Euler's pentagonal numbers (3*j^2+j)/2
+EPTtest:=proc(N): local q, j, f, g, k: f:=mul(1-q^k,k=1..N):
+g:=add((-1)^j*q^((3*j^2+j)/2), j=1..trunc(2*sqrt(N/3)+1))+add((-1)^j*q^((3*j^2-j)/2), j=1..trunc(2*sqrt(N/3)+1)): taylor(f-g,q=0,N+1); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C12
+
+#BEGIN REFORMATTED C13
+############################################################################################################################################################
+
+#PFG(L): The Ferrers graph of the partition L
+PFG:=proc(L): local i: for i from 1 to nops(L) do lprint(1$L[i]): end do; print(`----------------`): end proc:
+
+#SYT(L): The SET of Standard Young tableaux of shape L
+SYT:=proc(L) option remember: local i, k, n, S, L1, S1, s1: k:=nops(L): n:=add(L[i],i=1..k): if k=0 then RETURN({[]}); end if; S:={}:
+for i from 1 to k-1 do if L[i]>L[i+1] then L1:=[op(1..i-1,L),L[i]-1,op(i+1..k,L)]; S1:=SYT(L1);
+S:=S union {seq([op(1..i-1,s1),[op(s1[i]),n],op(i+1..k,s1)],s1  in S1)}; end if; end do;
+if L[k]>1 then L1:=[op(1..k-1,L),L[k]-1]; S1:=SYT(L1); S:=S union {seq([op(1..k-1,s1),[op(s1[k]),n]],s1  in S1)};
+else L1:=[op(1..k-1,L)]; S1:=SYT(L1); S:=S union {seq([op(1..k-1,s1), [n]],s1  in S1)}; end if; S; end proc:
+
+#PSYT(Y): prints the SYT Y
+PSYT:=proc(Y): local i: for i from 1 to nops(Y) do lprint(op(Y[i])): end do; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C13
+
+#Imported OEIS Search
+############################################################################################################################################################
+
+URLpath := "https://oeis.org/":
+
+Search := proc() option cache; local argsin, i, j, oeis_json, parsed_value, searchstring, cmd; parsed_value := Array(1..0):
+if type( [ args ], 'list'('integer') ) = true and nargs < 6 or ( type( [ args ], 'list'('integer') ) = false and not type( args, 'string') ) then
+error "6 or more integers required"; elif type( [ args ], 'list'('integer') ) = true then argsin := :-map( :-convert, [ args ], ':-string' );
+searchstring := cat( argsin[1], seq( op( [",", argsin[i]] ), i = 2..numelems( argsin ) ) ); elif type( args, 'string') then
+argsin := [args]; searchstring := StringTools:-SubstituteAll(op(argsin), " ", "%20"); else error "in arguments, expected integer sequence or string; received", op( [ args ] ); end if;
+cmd := cat("curl -s ", URLpath, "search?fmt=json&q=", searchstring): oeis_json := ssystem(cmd)[2]: parsed_value(1) := eval( JSON:-ParseString( oeis_json ) );
+if type(parsed_value[1][1]["number"],integer) then return parsed_value[1][1]["number"]; else return -1; end if; end proc:
+
+############################################################################################################################################################
+#Imported OEIS Search
+
+#1. A partition is d-super-distinct if the difference between two consecituve parts is >=d. The usual distinct partitions are 1-distinct.
+#   Write a procedure IsSuperDistinct(L) that inputs a partition (a member of Par(n), written in the usual way as weakly decreasing list of integers)
+#   and outputs true iff for all i, between 1 and nops(L)-1, L[i]-L[i+1]>=d Using this, write a procedure SuperDistinctPars(n,d)
+#   That outputs the subset of Par(n) consisting of d-super-distinct partitions
+
+IsSuperDistinct:=proc(L,d):
+local i, check:
+check:=true:
+for i from 1 to nops(L) - 1 do
+if L[i]-L[i+1] < d then check:=false; end if;
+end do; check; end proc:
+
+SuperDistinctPars:=proc(n,d):
+local S, s, K:
+S:=Par(n):
+K:={}:
+for s in S do
+if IsSuperDistinct(s,d) = true then K:=K union {s}; end if;
+end do; K; end proc:
+
+#SuperDistinctPars(9,3);
+#Verfied to be working
+
+#2. Write a procedure ParMod(n,a,A) that inputs a positive integer n, another positive integer a, and a subset, A, of {0,1, .., a-1}
+#   and outputs the subset of Par(n) consisting of those partitions all whose entries mod a belong to A.
+
+ParMod:=proc(n,a,A):
+local S, s, K, i, check:
+S:=Par(n):
+K:={}:
+for s in S do
+check:=true:
+for i from 1 to nops(s) do
+if not s[i] mod a in A then check:=false; end if;
+end do;
+if check = true then K:=K union {s}; end if;
+end do; K; end proc:
+
+#ParMod(10,3,{0,1});
+#Verfied to be working
+
+#3. What OEIS sequence is {nops(SuperDistinct(n,2))}?
+#   What OEIS sequence is {nops(ParMod(n,5,{1,4}))}?
+
+#Search(seq(nops(SuperDistinct(n,2)),n=1..20));
+#Search(seq(nops(ParMod(n,5,{1,4})),n=1..20));
+
+#Returns A055642 and A003114 respectively
+
+#4. Eventually nops(SYT(L)) will be impractical, since the sets SYT(L) gets very big. Adapt procedure SYT(L) to write a procedure
+#   NuSYT(L) that inputs an integer partition L, and outputs the NUMBER of Standard Young Tableaux of shape L. For example
+#   NuSYT([2,2]); should output 2, and NuSYT([3,3,3]); should output 42. (REMEMBER TO HAVE option rememeber)
+
+Endpoints:=proc(L):
+local i, S:
+S:={}:
+for i from 1 to nops(L)-1 do
+if L[i] > L[i+1] then S:=S union {i}:
+end if; end do; return S union {nops(L)}; end proc:
+
+ChopZeros:=proc(L):
+local r, n, i:
+n:=nops(L): r:=1:
+while r < n + 1 and L[r] > 0 do r:=r+1: end do;
+[seq(L[i], i=1..r-1)];
+end proc:
+
+ChopEnds:=proc(L,S):
+local i, n, s, j, K:
+n:=nops(L):
+K:=L:
+for i in S do
+K:=[seq(op(j,K), j=1..i-1), op(i,K)-1, seq(op(j,K), j=i+1..n)];
+end do; K; end proc:
+
+NuSYT:=proc(L) option remember:
+local n, s, i, c, S:
+n:=nops(L):
+s:=add(L[i],i=1..n):
+if n = 1 or s = n then return 1; end if;
+c:=0: S:=Endpoints(L):
+c:=nops(S)! * NuSYT(ChopZeros(ChopEnds(L,S))):
+c;
+end proc:
+
+#This formulation is incorrect as it does not capture the full interaction of removing an endpoint if it is the last point in the row
+
+#5. [Optional challenge, 10 dollars to be divided, NO PEEKING]
+#   Conjecture an explicit expression for NuSYT([a,b]) (alias nops(SYT([a,b])) for all a ≥ b ≥ 0
+
+#seq(nops(SYT([n,1])),n=1..20);
+#seq(nops(SYT([n,2])),n=1..20);
+#seq(nops(SYT([n,3])),n=1..20);
+
+#Conjectured formula: SYT([n,1]) = n,
+#SYT([n,m]) = if n <= m: SYT([n,m-1])
+#             if n >  m: SYT([n-1,m])+SYT([n,m-1])
+
+#Search(seq(nops(SYT([n,10])),n=1..10));
+#Hints that nops(SYT([n,m])) may approach the OEIS seq A000108 as n and m go to infinity
+
+#6. [Optional challenge, 15 dollars to be divided, NO PEEKING]
+#   Conjecture an explicit expression for NuSYT([a,b,c]) (alias nops(SYT([a,b,c])) for all a ≥ b ≥ c ≥ 0
+
+#seq(nops(SYT([n,1,1])),n=1..20);
+
+#Conjectured formula: SYT([n,1,1]) = Sum(1..n)
+#SYT([n,1,m]) = SYT([n-1,1,m]) + SYT([n,1,m-1])
+#SYT([n,m,1]) = ???
+
+
+
+
+
+
+
