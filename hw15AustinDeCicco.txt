@@ -1,0 +1,87 @@
+#OK to post homework
+#Austin DeCicco, 3/31/26, Assignment 15
+
+#BEGIN REFORMATTED C15
+############################################################################################################################################################
+
+#March 12, 2026 Pi Day special
+
+with(combinat):
+
+IsUD:=proc(pi): local n: n:=nops(pi): if n=1 then RETURN(true); end if; if pi[1]>pi[2] then RETURN(false); end if;
+if IsDU([op(2..n,pi)]) then RETURN(true); else RETURN(false); end if; FAIL; end proc:
+
+IsDU:=proc(pi): local n: n:=nops(pi): if n=1 then RETURN(true); end if; if pi[1]<pi[2] then RETURN(false); end if;
+if IsUD([op(2..n,pi)]) then RETURN(true); else RETURN(false); end if; FAIL; end proc:
+
+#UDperms(n): The set of up-down permutations of {1,...n} (aka Zigzag permuations, aka Andre permutation)
+UDperms:=proc(n): local A, G, pi: A:=permute(n): G:={}: for pi in A do if IsUD(pi) then G:=G union {pi}; end if; end do; G; end proc:
+ 
+#A111s(n): The brute force (stupid) way to compute the first n terms of the OEIS sequence A111, nops(UDperms(n))
+A111s:=proc(n): local i: [seq(nops(UDperms(i)),i=1..n)]; end proc:
+ 
+#PiAppxS(n): The first n approximations to the combinatorial way to compute pi via up-down permutations the stupid way
+PiAppxS:=proc(n): local L, i: L:=A111s(n): [seq(2*i*L[i-1]/L[i],i=2..n)]; end proc:
+ 
+#UDni(n,i): the NUMBER of up-down permutations of {1, ...n} that start with i
+UDni:=proc(n,i) option remember: local j: if n=1 then if i=1 then RETURN(1); else RETURN(0); end if; end if; add(DUni(n-1,j),j=i..n-1); end proc:
+ 
+#DUni(n,i): the NUMBER of down-up permutations of {1, ...n} that start with i
+DUni:=proc(n,i) option remember: local j: if n=1 then if i=1 then RETURN(1); else RETURN(0); end if; end if; add(UDni(n-1,j),j=1..i-1); end proc:
+ 
+UDn:=proc(n): local i: add(UDni(n,i),i=1..n); end proc:
+ 
+#A111c(n): The clevered way to compute the first n terms of the OEIS sequence A111, nops(UDperms(n))
+A111c:=proc(n): local i: [seq(UDn(i),i=1..n)]; end proc:
+ 
+#PiAppx(n): The first n approximations to the combinatorial way to compute pi via up-down permutations the clever way
+PiAppx:=proc(n): local L, i: L:=A111c(n): [seq(2*i*L[i-1]/L[i],i=2..n)]; end proc:
+ 
+#UDc(n): The number of up-down permutations done even more cleverly
+UDc:=proc(n) option remember: local k: if n=0 or n=1 then RETURN(1); end if; add(binomial(n-1,2*k-1)*UDc(2*k-1)*UDc(n-2*k),k=1..trunc(n/2)); end proc:
+
+#A111vc(n): The very clever way to compute the first n terms of the OEIS sequence A111, nops(UDperms(n))
+A111vc:=proc(n): local i: [seq(UDc(i),i=1..n)]; end proc:
+
+#PiAppxVC(n): The first n approximations to the combinatorial way to compute pi via up-down permutations the very clever way
+PiAppxVC:=proc(n): local L, i: L:=A111vc(n): [seq(2*i*L[i-1]/L[i],i=2..n)]; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C15
+
+#1. Another sequence of rational numbers that converges to Pi is 16^n/(n*binomial(2*n,n)^2), n=1,2,...
+
+#1.1. Using Maple, prove it!
+
+IsConverging:=proc(pi): local n: n:=nops(pi): if n<2 then RETURN(true); end if; if abs(pi[2])>abs(pi[1]) then RETURN(false); else RETURN(IsConverging([op(2..n,pi)])); end if; end proc:
+
+#IsConverging([seq(evalf(16^n/(n*binomial(2*n,n)^2)-Pi),n=1..500)]);
+#The above returns true showing that 16^n/(n*binomial(2*n,n)^2 seems to converge to Pi as n goes to infinity
+
+#1.2. Write a little procedure that outputs the first N terms of this sequence, how many digits of Pi do you get from the 1000-th term?
+#How does it compare with PiAppxVC(1000)[1000]?
+
+Digits:=10000;
+Npi:=proc(N): local n: [seq(16^n/(n*binomial(2*n,n)^2), n=1..N)]; end proc:
+
+#-trunc(log[10](abs(evalf(Npi(1000)[-1]-Pi))));
+#Outputs: 3
+#-trunc(log[10](abs(evalf(PiAppxVC(1000)[-1]-Pi))));
+#Outputs: 476
+
+#PiAppxVC appears to converge to Pi way faster than Npi
+
+#2. Code K(n) according to the definition (using the integral) and also, calling it Kc(n), using the second-order recurrence (don't forget option remember).
+
+K:=proc(n): int((x^(4*n)*(-x+1)^(4*n))/(x^2+1), x=0..1); end proc:
+Kc:=proc(n) option remember: local m, A, B, C: if n=0 then RETURN(Pi/4); elif n=1 then RETURN(22/7-Pi); else m:=n-2:
+A:=4*(4*m+1)*(4*m+3)*(820*m^3+3993*m^2+6428*m+3420)*(m+1)*(2*m+1):
+B:=26843520*m^7+211258528*m^6+688917624*m^5+1202271190*m^4+1207256235*m^3+693651577*m^2+209656416*m+25472340:
+C:=2*(8*m+9)*(8*m+11)*(8*m+13)*(8*m+15)*(820*m^3+1533*m^2+902*m+165):
+RETURN(simplify((A*Kc(n-2)-B*Kc(n-1))/C)): end if; end proc:
+
+#What is faster [seq(K(n),n=1..200)] OR [seq(Kc(n),n=1..200)]?
+#time([seq(K(n),n=1..200)])=233.000
+#time([seq(Kc(n),n=1..200)])=1.546
+
+#Kc is significantly faster
