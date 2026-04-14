@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <!-- Mobile scaling -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="description" content="Austin DeCicco - Graduate Projects">
+
+  <title>Graduate Projects - Austin DeCicco</title>
+
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      line-height: 1.6;
+      color: #222;
+
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)),
+        url("back.jpg");
+
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      padding: 0 15px;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      color: #111;
+    }
+
+    h2 {
+      margin-top: 30px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+      font-size: 1.6em;
+    }
+
+    h4.course-title {
+      margin-top: 25px;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    p {
+      margin-bottom: 12px;
+    }
+
+    ul {
+      padding-left: 20px;
+      margin-top: 6px;
+    }
+
+    footer {
+      margin-top: 40px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    a {
+      color: #0033cc;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+      color: #0055ff;
+    }
+
+    /* Transparent orange link style (used for back button) */
+    .orange-button {
+      display: inline-block;
+      padding: 8px 14px;
+      background: transparent;
+      border-radius: 6px;
+      border: 2px solid #e67e22;
+      color: #e67e22;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .orange-button:hover {
+      background: #ff9900;
+      color: white;
+      border-color: #ff9900;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+      text-decoration: none;
+    }
+
+    /* Project cards */
+    .project {
+      margin-bottom: 20px;
+      padding: 12px 14px;
+      border-left: 4px solid #bbb;
+      background: rgba(255, 255, 255, 0.65);
+      border-radius: 5px;
+      transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .project:hover {
+      border-left: 4px solid #0033cc;
+      background: rgba(255, 255, 255, 0.85);
+      transform: translateY(-1px);
+    }
+
+    .project a {
+      font-weight: bold;
+      font-size: 1.05em;
+    }
+
+    .project-desc {
+      margin-top: 6px;
+      font-size: 0.95em;
+      color: #444;
+    }
+
+    code {
+      background: #eee;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+
+    /* Smaller image on mobile */
+    @media (max-width: 480px) {
+      body {
+        padding: 0 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main>
+
+    <p><a class="orange-button" href="index.html">← Back to Home</a></p>
+
+    <h2>Graduate Projects</h2>
+
+    <p>Here is a collection of some of my graduate projects, past and present.</p>
+    <p>This page mainly serves as a file share for my collaborators, some crucial files and project details may be missing.</p>
+
+    <h4 class="course-title">Experiments with the Robinson-Schenstead algorithm, Bootstrap method to find statistical properties of permutations reflected by the RS algorithm:</h4>
+
+    <div class="project">
+      <a href="OEIS.txt" target="_blank" rel="noopener noreferrer">Maple OEIS Search Function</a>
+
+      <div class="project-desc">
+
+        <p>
+          A Maple program that queries the Online Encyclopedia of Integer Sequences (OEIS)
+          to search for integer sequences directly from Maple. The function allows users
+          to input a sequence of numbers and retrieve possible OEIS matches automatically.
+        </p>
+
+        <p><strong>Notes:</strong></p>
+
+        <ul>
+          <li>Input must be sequences, not lists (see comments inside the file).</li>
+
+          <li>
+            If you receive the error:<br>
+            <code>Error, (in URL:-Get) protocol "https" not supported or disabled in libcurl</code><br>
+            update Maple to a newer version.
+          </li>
+
+          <li><strong>Verified Working:</strong> 3/9/2026</li>
+        </ul>
+
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>Built and Designed by Austin DeCicco</p>
+    <p>Last Updated: April 14, 2026</p>
+  </footer>
+
+</body>
+
+</html>

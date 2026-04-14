@@ -1,0 +1,194 @@
+#OK to post homework
+#Austin DeCicco, 4/5/26, Assignment 18
+
+#BEGIN REFORMATTED C12
+############################################################################################################################################################
+
+with(combinat):
+
+#Park(n,k): The set of partitions of n into exactly k parts
+Park:=proc(n,k) option remember: local S, k1, S1, s1: if n<k then RETURN({}); end if; if k=0 then if n=0 then RETURN({[]}); else RETURN({}); end if; end if;
+S:={}: for k1 from 0 to k do S1:=Park(n-k,k1): S:= S union {seq([op(s1+[1$k1]),1$(k-k1)], s1 in S1)}: end do; S; end proc:
+
+#Par(n): The set of partitions of n, the clever way.
+Par:=proc(n): local k: {seq(op(Park(n,k)), k=1..n)}; end proc:
+
+#A41s(N): OEIS sequence A41 done stupidly (construct the actual set) and take the cardinality
+A41s:=proc(N): local n: [seq(nops(Par(n)),n=1..N)]; end proc:
+
+#A41ok(N): OEIS sequence A41 done much more efficiently using Euler's generating function Sum(p(n)*q^n,n=0..infinity)=Prod(1/(1-q^k), k=1..infinity)
+A41ok:=proc(N): local k, f, q: f:=mul(1/(1-q^k),k=1..N): f:=taylor(f,q=0,N+4): [seq(coeff(f,q,k),k=1..N)]; end proc:
+
+#EulerM(N,q): The truncation to 1^N of Prod(1-q^k, k=1..infinity)
+EulerM:=proc(N,q): local f, k: f:=mul(1-q^k,k=1..N): f:=taylor(f,q=0,N+1); end proc:
+
+#ConjP(N): The conjectured powers of the polynomial in EulerM
+ConjP:=proc(N): local j, L: L:=[]: for j from 1 to N while (3*j^2-j)/2<=N do L:=[op(L),(3*j^2-j)/2]: end do; for j from 1 to N while (3*j^2+j)/2<=N do
+L:=[op(L),(3*j^2+j)/2]: end do; sort(L); end proc:
+
+#EPTtest(N): testing Euler's pentagonal numbers (3*j^2+j)/2
+EPTtest:=proc(N): local q, j, f, g, k: f:=mul(1-q^k,k=1..N):
+g:=add((-1)^j*q^((3*j^2+j)/2), j=1..trunc(2*sqrt(N/3)+1))+add((-1)^j*q^((3*j^2-j)/2), j=1..trunc(2*sqrt(N/3)+1)): taylor(f-g,q=0,N+1); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C12
+
+#BEGIN REFORMATTED C13
+############################################################################################################################################################
+
+#PFG(L): The Ferrers graph of the partition L
+PFG:=proc(L): local i: for i from 1 to nops(L) do lprint(1$L[i]): end do; print(`----------------`): end proc:
+
+#SYT(L): The SET of Standard Young tableaux of shape L
+SYT:=proc(L) option remember: local i, k, n, S, L1, S1, s1: k:=nops(L): n:=add(L[i],i=1..k): if k=0 then RETURN({[]}); end if; S:={}:
+for i from 1 to k-1 do if L[i]>L[i+1] then L1:=[op(1..i-1,L),L[i]-1,op(i+1..k,L)]; S1:=SYT(L1);
+S:=S union {seq([op(1..i-1,s1),[op(s1[i]),n],op(i+1..k,s1)],s1  in S1)}; end if; end do;
+if L[k]>1 then L1:=[op(1..k-1,L),L[k]-1]; S1:=SYT(L1); S:=S union {seq([op(1..k-1,s1),[op(s1[k]),n]],s1  in S1)};
+else L1:=[op(1..k-1,L)]; S1:=SYT(L1); S:=S union {seq([op(1..k-1,s1), [n]],s1  in S1)}; end if; S; end proc:
+
+#PSYT(Y): prints the SYT Y
+PSYT:=proc(Y): local i: for i from 1 to nops(Y) do lprint(op(Y[i])): end do; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C13
+
+#BEGIN REFORMATTED C14
+############################################################################################################################################################
+
+#RS11(a,i): inputs an INCREASING list of positive integers, a, and another positive integer i outputs a pair a1,j, where (usually a1 is of the same length as a)
+#and i is put where it belongs and j is the entry that it bumped, unless i is larger than all the members of a (i.e. larger than a[-1]) then a1 is [op(a),i], and j is 0
+RS11:=proc(a,i): local k, j: k:=nops(a): for j from 1 to k while a[j]<i do end do; if j=k+1 then RETURN([op(a),i],0); end if; [op(1..j-1,a),i,op(j+1..k,a)],a[j]; end proc:
+
+NuSYTpairs:=proc(n) option remember: local S, P, p: P:=Par(n): S:=0: for p in P do S:=S+NuSYT(p)^2: end do; S; end proc:
+
+SYTpairs:=proc(n) option remember: local S, P, p, S1, s1, s2: P:=Par(n): S:={}: for p in P do S1:=SYT(p):
+S:= S union {seq(seq([s1,s2], s1 in S1), s2 in S1)}: end do; S; end proc:
+
+#NuSYT(L): The NUMBER of Standard Young tableaux of shape L
+NuSYT:=proc(L) option remember: local i, k, S, L1: k:=nops(L): if k=0 then RETURN(1); end if; S:=0: for i from 1 to k-1 do if L[i]>L[i+1] then
+L1:=[op(1..i-1,L),L[i]-1,op(i+1..k,L)]; S:=S+NuSYT(L1); end if; end do; if L[k]>1 then L1:=[op(1..k-1,L),L[k]-1]; S:=S+ NuSYT(L1); else
+L1:=[op(1..k-1,L)]; S:=S+NuSYT(L1); end if; S; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C14
+
+#BEGIN REFORMATTED C16
+############################################################################################################################################################
+
+#C16.txt, March 23, 2026
+Help16:=proc(): print(`RSleft(pi), RS1(Y,i), RS(pi) `): end:
+
+#RS1(Y,i): inputs a partial Young tableau and another integer i NOT yet in Y places it in the right place,
+#by a bumping process it returns a tableau with one more box followed by the name of the row where it settled
+RS1:=proc(Y,i): local k, NewY, lucy, bumpee, i1, j: if Y=[] then RETURN([[i]],1); end if; k:=nops(Y):
+lucy:=RS11(Y[1],i): NewY[1]:=lucy[1]: bumpee:=lucy[2]: if bumpee=0 then RETURN([NewY[1],op(2..k,Y)],1);
+end if; for i1 from 2 to k  while bumpee<>0 do lucy:=RS11(Y[i1],bumpee): NewY[i1]:=lucy[1]: bumpee:=lucy[2]:
+if bumpee=0 then RETURN([seq(NewY[j],j=1..i1),op(i1+1..k,Y)],i1); end if; end do; [seq(NewY[j],j=1..k),[bumpee]],k+1; end proc:
+
+#RS(pi): inputs a permutation pi of ({1, ..., n:=nops(pi)) and outputs a pair of SYT of the SAME shape (with n boxes) The Robinson-Schenstead algorithm
+RS:=proc(pi): local Yl, i, Yr, eaea, p: if pi=[] then RETURN([[],[]]); end if; Yl:=[[pi[1]]]: Yr:=[[1]]: for i from 2 to nops(pi) do eaea:=RS1(Yl,pi[i]):
+Yl:=eaea[1]: p:=eaea[2]: if p<=nops(Yr) then Yr:=[op(1..p-1,Yr),[op(Yr[p]),i],op(p+1..nops(Yr),Yr)]; else Yr:=[op(Yr),[i]]; end if; end do; [Yl, Yr]; end proc:
+
+#RSeft(pi): inputs a permutation pi (of size nops(pi)) and outputs of whatever shape (with n boxes)
+RSleft:=proc(pi): local Y, i: Y:=[]: for i from 1 to nops(pi) do Y:=RS1(Y,pi[i])[1]: end do; Y; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C16
+
+#BEGIN REFORMATTED C17
+############################################################################################################################################################
+
+#Cells(L): the set of n (=sum(L)) cells [i,j] in the shape L
+Cells:=proc(L): local k, i, j: k:=nops(L): {seq(seq([i,j],j=1..L[i]),i=1..k)}; end proc:
+
+Conj:=proc(L) option remember: local k, C1, i1, L1, i: if L=[] then RETURN([]); end if; k:=nops(L): L1:=[seq(L[i]-1,i=1..k)]:
+for i1 from 1 to nops(L1) while L1[i1]>0 do end do; i1:=i1-1: L1:=[op(1..i1,L1)]: C1:=Conj(L1): [k,op(C1)]; end proc:
+
+#Hook(L,c): The set of the cells in the hook corresponding to the cell c=[i,j] (i.e. the set of cells to the right and to the bottom of c)
+Hook:=proc(L,c): local k, i, j, C, i1, j1, i2: k:=nops(L): i:=c[1]: j:=c[2]: if not (i>=1 and i<=k) then RETURN(FAIL); end if;
+if not(j>=1 and j<=L[i]) then RETURN(FAIL); end if; C:={seq([i,j1],j1=j..L[i])}: for i2 from i to k while j<=L[i2] do end do;
+i2:=i2-1: C:=C union {seq([i1,j],i1=i..i2)}: end proc:
+
+#HL(L,c): the hook-length of cell c in the shape L
+HL:=proc(L,c): nops(Hook(L,c)); end proc:
+
+HLc:=proc(L,c): local i, j, L1: L1:=Conj(L): i:=c[1]: j:=c[2]: L[i]-j+L1[j]-i+1; end proc:
+
+#NuSYTc(L): implementing the Frame-Robinson-Thrall Hook Length Formula
+NuSYTc:=proc(L): local n, C, i, c: n:=add(L[i],i=1..nops(L)): C:=Cells(L): n!/mul(HL(L,c),c in C); end proc:
+
+#NuSYTcc(L): implementing the Frame-Robinson-Thrall Hook Length Formula Cleverly
+NuSYTcc:=proc(L): local n, C, i, c: n:=add(L[i],i=1..nops(L)): C:=Cells(L): n!/mul(HLc(L,c),c in C); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C17
+
+#BEGIN REFORMATTED C18
+############################################################################################################################################################
+
+Jike:=proc(n,x): local S, pi: S:=permute(n): add(x^nops(RS(pi)[1]),pi in S); end proc:
+
+#PlotDist(f,x): plots the prob. distribution inspired by the weight enumerator f in the variable x after it is turned to a prob. distribution (after dividing by subs(x=1,f)
+PlotDist:=proc(f,x): local f1, i: f1:=f/subs(x=1,f): plot([seq([i,coeff(f1,x,i)],i=ldegree(f1,x)..degree(f1,x))]); end proc:
+
+#WtE(S,f,x): the weight-enumerator of the set S according to the statistic f(s) WtE(permute(5), pi->nops(RS(pi)[1]),x);
+WtE:=proc(S,f,x): local s: add(x^f(s),s in S); end proc:
+
+Moms:=proc(f,x,r): local mu, L, f1, sig, i: f1:=f/subs(x=1,f): mu:=subs(x=1,diff(f1,x)): L:=[mu]: f1:=f1/x^mu: f1:=x*diff(f1,x): f1:=x*diff(f1,x): sig:=sqrt(subs(x=1,f1)):
+L:=[mu,sig]: for i from 3 to r do f1:=x*diff(f1,x): L:=[op(L), subs(x=1,f1)]: end do; L; end proc:
+
+SMoms:=proc(f,x,r): local L, sig, i: L:=Moms(f,x,r): sig:=L[2]: [op(1..2,L),seq(L[i]/sig^i,i=3..r)]; end proc:
+
+OT:=proc(L): local n, c: n:=convert(L,`+`): c:=Cells(L)[rand(1..n)()]: while HLc(L,c)>1 do c:=Hook(L,c)[rand(1..HLc(L,c))()]: end do; c; end proc:
+
+#RandSYT(L): a random SYT of shape L
+RandSYT:=proc(L): local k, c, i, L1, n, Y1: if L=[1] then RETURN([[1]]); end if; n:=convert(L,`+`): k:=nops(L): c:=OT(L): i:=c[1]: L1:=[op(1..i-1,L),L[i]-1,op(i+1..k,L)]:
+if L1[-1]=0 then L1:=[op(1..nops(L1)-1,L1)]; end if; Y1:=RandSYT(L1): if nops(L1)=k then [op(1..i-1,Y1),[op(Y1[i]),n],op(i+1..k,Y1)]; else [op(1..k-1,Y1),[n]]; end if; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C18
+
+#1. Using Moms, find the exact average and s.d. for rolling a fair die n times, and using SMoms prove that its scaled moments up to the 20th agree with those of the standard normal distribution
+#   Conjecture an expression, in n, for the average of the [2,2] entry in a standard Young tableau of shape [n,n,n]
+
+u:=Moms(WtE({1,2,3,4,5,6},abs,x),x,3):
+print("Mean is ");
+print(n*u[1]);
+print("STD is ");
+print(n*u[2]);
+
+SMoms(WtE({1,2,3,4,5,6},abs,x),x,20);
+
+#Conjecture:
+
+#Observe the lower bound of 4.
+#Observe the upper bound of n + 3. Derived from the fact we must fill the whole SYT with 3n numbers and we must fill the modified SYT missing the first row and column with 2(n-1) numbers,
+#with [2,2] being the smallest of these 2(n-1) numbers, implying the forced existence of 2(n-1) - 1 bigger numbers than [2,2]. 3n - (2(n-1) - 1) = n + 3.
+#Using similar logic we arrive at the bounds of 2 and n + 1 for both [2,1] and [1,2]. I believe you could arrive at a true average for [2,2] by counting all the possible places each number in the range
+#4 to n + 3 could go then entering it into expectation assuming they take any of their possible positions with uniform probability.
+
+#2. Write a procedure AppxAve22(n,K) that takes K random standard Young tableaux of shape [n,n,n], finds its [2,2] entry and takes the average
+#   What is AppxAve22(30,1000)? AppxAve22(30,10000)? Are these close? Do they agree with your conjecture for the exact value?
+
+AppxAve22:=proc(n,K):
+local L, i, average, sum, rSYT:
+if n<2 then return("n must be >= 2"); end if;
+L:=[n,n,n]: sum:=0:
+for i from 1 to K do
+rSYT:=RandSYT(L):
+sum:=sum + rSYT[2][2]:
+end do; average:=sum/K; end proc:
+
+#AppxAve22(30,1000);
+#Output: 1243/200, 6.215
+#AppxAve22(30,10000);
+#Output: 31177/5000, 6.2354
+
+#These values are extremely close as expected.
+
+#3. Write a procedure AppxJike(n,x,K) that approximates the prob. gen. function of the weight pi->nops(RS(pi)[1]) by taking K random permutations (using randperm(n))
+#   Do PlotDist(AppxJike(100,x,1000)), PlotDist(AppxJike(200,x,1000)). Do they look alike?
+
+
+
+

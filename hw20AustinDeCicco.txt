@@ -1,0 +1,86 @@
+#OK to post homework
+#Austin DeCicco, 4/12/26, Assignment 20
+
+#BEGIN REFORMATTED C20
+############################################################################################################################################################
+
+with(combinat):
+
+#CH(): The list of the heights in Math640 (Sp. 2026) (w/o Pablo and Jike)
+CH:=proc(): [61,63,71,68,54,73]; end proc:
+
+#Av(L): Given a list L of numbers outputs the average (aka mean, aka expectation)
+Av:=proc(L): local n, i: n:=nops(L): evalf(add(L[i],i=1..n)/n); end proc:
+
+#SE(L): The classical textbook formula for the standard-error
+SE:=proc(L): local n, mu, i: n:=nops(L): mu:=Av(L):
+#add the squares of the deviations from the average
+evalf(sqrt(add((L[i]-mu)^2,i=1..n))/n);
+end proc:
+
+#BSsamp(L): ONE bootstrap sample from the data list L
+BSsamp:=proc(L): local n, ra, L1, i: n:=nops(L): ra:=rand(1..n): L1:=[seq(L[ra()],i=1..n)]; end proc:
+
+#BSse(L,B): The Bootstrap estimate of the standard error of the data set L
+BSse:=proc(L,B): local M, i, mu: M:=[seq(Av(BSsamp(L)),i=1..B)]: mu:=Av(M): evalf(sqrt(add((M[i]-mu)^2,i=1..B)/(B-1))); end proc:
+
+#FP(pi): The number of fixed points of the permutation pi
+FP:=proc(pi): local n, i, co: n:=nops(pi): co:=0: for i from 1 to n do if pi[i]=i then co:=co+1; end if; end do; co; end proc:
+
+#The weight-enumerator of S_n according to x^FP(pi)
+GFfpBF:=proc(n,x): local S, pi: S:=permute(n): add(x^FP(pi), pi in S); end proc:
+
+#Av(FP)= Sum(Av({pi[i]=i},i=1..n)}:
+#Pr. 1/n pi[i]=i with prob. (n-1)/n pi[i]<>i
+#E[{pi[i]=i]}]= 1*1/n+ 0*(1-1/n)= 1/n
+#1/n+1/n+...+1/n=1
+
+GFfp:=proc(n,x): local k: expand(add(binomial(n,k)*(x-1)^k*(n-k)!,k=0..n)); end proc:
+
+#PerS(n,K): a random sample of the number of fixed points of K permutations of length n
+PerS:=proc(n,K): local i: [seq(FP(randperm(n)),i=1..K)]; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C20
+
+#1. Lucy Martinez asked a very good question: In one bootstrap sample with n data entries, why do we sample (with replacement) exactly n times.
+#   Write a procedure GenBSsamp(L,k) that generates a bootstrap sample of length k*nops(L), and generalize BSse(L,B) to compute GenBSse(L,B,k)
+#   With L:=CH(), what are GenBSse(L,1000,1/2), GenBSse(L,1000,2), GenBSse(L,1000,1) (alias BSse(L,1000) which of them is closest to SE(L)?
+
+GenBSsamp:=proc(L,k): local n, ra, L1, i: n:=k*nops(L): ra:=rand(1..nops(L)): L1:=[seq(L[ra()],i=1..n)]; end proc:
+GenBSse:=proc(L,B,k): local M, i, mu: M:=[seq(Av(GenBSsamp(L,k)),i=1..B)]: mu:=Av(M): evalf(sqrt(add((M[i]-mu)^2,i=1..B)/(B-1))); end proc:
+L:=CH():
+
+#Av([seq(GenBSse(L,1000,1/2),i=1..100)]);
+#Av([seq(GenBSse(L,1000,2),i=1..100)]);
+#Av([seq(GenBSse(L,1000,1),i=1..100)]);
+#SE(L);
+
+#Output:
+#3.730167415
+#1.863843806
+#2.634941701
+#2.635231383
+
+#As you can see only the mean of GenBSse(L,1000,1) is quickly approaching the true value of SE(L).
+
+#2. Recall (from a previous class) that the number of inversions of a permutation, pi, denoted by inv(pi), is the number of pairs 1 ≤ i < j ≤ n such that pi[i] > pi[j].
+#   Another permutation statistic is the major index, defined as the sum of the places 1 ≤ i ≤ n-1 such that pi[i] > pi[i+1]. By picking 1000 random permutations of length 100,
+#   estimate the average of inv(pi)*maj(pi) over all permutations of length 100 (BTW, I have no clue what it is supposed to be, there is no explicit formula (that I know of).
+#   All I know is that it is between 0 and binomial(100,2)2) What is the estimated standard error?
+
+P2samp:=proc(): local S, i: S:={}: for i from 1 to 1000 do S:=S union {randperm(100)}: end do; S; end proc:
+
+maj:=proc(pi): local n, i, co: co:=0: n:=nops(pi): for i from 1 to n-1 do if pi[i]>pi[i+1] then co:=co+i; end if; end do; co; end proc:
+
+inv:=proc(pi): local n, i, j, co: n:=nops(pi): co:=0: for i from 1 to n do for j from i+1 to n do if pi[i]>pi[j] then co:=co+1; end if; end do; end do; co; end proc:
+
+InvMaj100Est:=proc(): local S, L, s: S:=P2samp(): L:=[seq(inv(s)*maj(s), s in S)]: Av(L); end proc:
+InvMaj100SEEst:=proc(): local S, L, s: S:=P2samp(): L:=[seq(inv(s)*maj(s), s in S)]: SE(L); end proc:
+
+#InvMaj100Est();
+#Output: 6103350.713
+
+#InvMaj100SEEst();
+#Output: 18502.98966
+
