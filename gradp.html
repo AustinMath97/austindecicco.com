@@ -73,7 +73,7 @@
       color: #0055ff;
     }
 
-    /* Transparent orange link style (used for back button) */
+    /* Back button */
     .orange-button {
       display: inline-block;
       padding: 8px 14px;
@@ -131,7 +131,55 @@
       font-size: 0.9em;
     }
 
-    /* Smaller image on mobile */
+    /* =========================
+       DROPDOWN (WITH ARROW)
+    ========================== */
+
+    .dataset-dropdown {
+      margin-top: 10px;
+    }
+
+    .dataset-dropdown summary {
+      cursor: pointer;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.75);
+      font-weight: 500;
+      transition: all 0.2s ease;
+      list-style: none;
+
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dataset-dropdown summary:hover {
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .dataset-dropdown[open] summary {
+      border-color: #0033cc;
+    }
+
+    /* Arrow */
+    .dataset-dropdown summary::before {
+      content: "▶";
+      display: inline-block;
+      transition: transform 0.2s ease;
+      font-size: 0.9em;
+      color: #555;
+    }
+
+    .dataset-dropdown[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    .dataset-dropdown ul {
+      margin-top: 10px;
+    }
+
+    /* Mobile */
     @media (max-width: 480px) {
       body {
         padding: 0 10px;
@@ -151,7 +199,9 @@
     <p>Here is a collection of some of my graduate projects, past and present.</p>
     <p>This page mainly serves as a file share for my collaborators, some crucial files and project details may be missing.</p>
 
-    <h4 class="course-title">Experiments with the Robinson-Schenstead algorithm, Bootstrap method to find statistical properties of permutations reflected by the RS algorithm:</h4>
+    <h4 class="course-title">
+      Experiments with the Robinson-Schenstead algorithm, Bootstrap method to find statistical properties of permutations reflected by the RS algorithm:
+    </h4>
 
     <div class="project">
       <a href="RSDataGen.txt" target="_blank" rel="noopener noreferrer">Procedures to generate the dataset</a>
@@ -162,43 +212,46 @@
           This is here as a guide to how to use the dataset as well as a reference to see how it was constructed.
         </p>
 
-        <p><strong>Datasets:</strong></p>
+        <details class="dataset-dropdown">
+          <summary><strong>Expand Dataset Files</strong></summary>
 
-        <ul>
-          <li><strong>Last Updated:</strong> 4/16/2026</li>
-          <li><a href="RSDataset.mpl" target="_blank" rel="noopener noreferrer">The Full Human Readable RSDataset</a></li>
-          <li><a href="RSDataset.m" target="_blank" rel="noopener noreferrer">The Full RSDataset</a></li>
-	  <li><a href="RSDataset1.m" target="_blank" rel="noopener noreferrer">The Q[1] RSDataset</a></li>
-	  <li><a href="RSDataset2.m" target="_blank" rel="noopener noreferrer">The Q[2] RSDataset</a></li>
-	  <li><a href="RSDataset3.m" target="_blank" rel="noopener noreferrer">The Q[3] RSDataset</a></li>
-	  <li><a href="RSDataset4.m" target="_blank" rel="noopener noreferrer">The Q[4] RSDataset</a></li>
-	  <li><a href="RSDataset5.m" target="_blank" rel="noopener noreferrer">The Q[5] RSDataset</a></li>
-	  <li><a href="RSDataset6.m" target="_blank" rel="noopener noreferrer">The Q[6] RSDataset</a></li>
-	  <li><a href="RSDataset7.m" target="_blank" rel="noopener noreferrer">The Q[7] RSDataset</a></li>
-	  <li><a href="RSDataset8.m" target="_blank" rel="noopener noreferrer">The Q[8] RSDataset</a></li>
-	  <li><a href="RSDataset9.m" target="_blank" rel="noopener noreferrer">The Q[9] RSDataset</a></li>
-	  <li><a href="RSDataset10.m" target="_blank" rel="noopener noreferrer">The Q[10] RSDataset</a></li>
-	  <li><a href="RSDataset11.m" target="_blank" rel="noopener noreferrer">The Q[11] RSDataset</a></li>
-	  <li><a href="RSDataset12.m" target="_blank" rel="noopener noreferrer">The Q[12] RSDataset</a></li>
-	  <li><a href="RSDataset13.m" target="_blank" rel="noopener noreferrer">The Q[13] RSDataset</a></li>
-	  <li><a href="RSDataset14.m" target="_blank" rel="noopener noreferrer">The Q[14] RSDataset</a></li>
-	  <li><a href="RSDataset15.m" target="_blank" rel="noopener noreferrer">The Q[15] RSDataset</a></li>
-	  <li><a href="RSDataset16.m" target="_blank" rel="noopener noreferrer">The Q[16] RSDataset</a></li>
-	  <li><a href="RSDataset17.m" target="_blank" rel="noopener noreferrer">The Q[17] RSDataset</a></li>
-	  <li><a href="RSDataset18.m" target="_blank" rel="noopener noreferrer">The Q[18] RSDataset</a></li>
-	  <li><a href="RSDataset19.m" target="_blank" rel="noopener noreferrer">The Q[19] RSDataset</a></li>
-	  <li><a href="RSDataset20.m" target="_blank" rel="noopener noreferrer">The Q[20] RSDataset</a></li>
-	  <li><a href="RSDataset21.m" target="_blank" rel="noopener noreferrer">The Q[21] RSDataset</a></li>
-	  <li><a href="RSDataset22.m" target="_blank" rel="noopener noreferrer">The Q[22] RSDataset</a></li>
-	  <li><a href="RSDataset23.m" target="_blank" rel="noopener noreferrer">The Q[23] RSDataset</a></li>
-	  <li><a href="RSDataset24.m" target="_blank" rel="noopener noreferrer">The Q[24] RSDataset</a></li>
-	  <li><a href="RSDataset25.m" target="_blank" rel="noopener noreferrer">The Q[25] RSDataset</a></li>
-	  <li><a href="RSDataset26.m" target="_blank" rel="noopener noreferrer">The Q[26] RSDataset</a></li>
-	  <li><a href="RSDataset27.m" target="_blank" rel="noopener noreferrer">The Q[27] RSDataset</a></li>
-	  <li><a href="RSDataset28.m" target="_blank" rel="noopener noreferrer">The Q[28] RSDataset</a></li>
-	  <li><a href="RSDataset29.m" target="_blank" rel="noopener noreferrer">The Q[29] RSDataset</a></li>
-	  <li><a href="RSDataset30.m" target="_blank" rel="noopener noreferrer">The Q[30] RSDataset</a></li>
-        </ul>
+          <ul>
+            <li><strong>Last Updated:</strong> 4/16/2026</li>
+            <li><a href="RSDataset.mpl" target="_blank" rel="noopener noreferrer">The Full Human Readable RSDataset</a></li>
+            <li><a href="RSDataset.m" target="_blank" rel="noopener noreferrer">The Full RSDataset</a></li>
+            <li><a href="RSDataset1.m" target="_blank" rel="noopener noreferrer">The Q[1] RSDataset</a></li>
+            <li><a href="RSDataset2.m" target="_blank" rel="noopener noreferrer">The Q[2] RSDataset</a></li>
+            <li><a href="RSDataset3.m" target="_blank" rel="noopener noreferrer">The Q[3] RSDataset</a></li>
+            <li><a href="RSDataset4.m" target="_blank" rel="noopener noreferrer">The Q[4] RSDataset</a></li>
+            <li><a href="RSDataset5.m" target="_blank" rel="noopener noreferrer">The Q[5] RSDataset</a></li>
+            <li><a href="RSDataset6.m" target="_blank" rel="noopener noreferrer">The Q[6] RSDataset</a></li>
+            <li><a href="RSDataset7.m" target="_blank" rel="noopener noreferrer">The Q[7] RSDataset</a></li>
+            <li><a href="RSDataset8.m" target="_blank" rel="noopener noreferrer">The Q[8] RSDataset</a></li>
+            <li><a href="RSDataset9.m" target="_blank" rel="noopener noreferrer">The Q[9] RSDataset</a></li>
+            <li><a href="RSDataset10.m" target="_blank" rel="noopener noreferrer">The Q[10] RSDataset</a></li>
+            <li><a href="RSDataset11.m" target="_blank" rel="noopener noreferrer">The Q[11] RSDataset</a></li>
+            <li><a href="RSDataset12.m" target="_blank" rel="noopener noreferrer">The Q[12] RSDataset</a></li>
+            <li><a href="RSDataset13.m" target="_blank" rel="noopener noreferrer">The Q[13] RSDataset</a></li>
+            <li><a href="RSDataset14.m" target="_blank" rel="noopener noreferrer">The Q[14] RSDataset</a></li>
+            <li><a href="RSDataset15.m" target="_blank" rel="noopener noreferrer">The Q[15] RSDataset</a></li>
+            <li><a href="RSDataset16.m" target="_blank" rel="noopener noreferrer">The Q[16] RSDataset</a></li>
+            <li><a href="RSDataset17.m" target="_blank" rel="noopener noreferrer">The Q[17] RSDataset</a></li>
+            <li><a href="RSDataset18.m" target="_blank" rel="noopener noreferrer">The Q[18] RSDataset</a></li>
+            <li><a href="RSDataset19.m" target="_blank" rel="noopener noreferrer">The Q[19] RSDataset</a></li>
+            <li><a href="RSDataset20.m" target="_blank" rel="noopener noreferrer">The Q[20] RSDataset</a></li>
+            <li><a href="RSDataset21.m" target="_blank" rel="noopener noreferrer">The Q[21] RSDataset</a></li>
+            <li><a href="RSDataset22.m" target="_blank" rel="noopener noreferrer">The Q[22] RSDataset</a></li>
+            <li><a href="RSDataset23.m" target="_blank" rel="noopener noreferrer">The Q[23] RSDataset</a></li>
+            <li><a href="RSDataset24.m" target="_blank" rel="noopener noreferrer">The Q[24] RSDataset</a></li>
+            <li><a href="RSDataset25.m" target="_blank" rel="noopener noreferrer">The Q[25] RSDataset</a></li>
+            <li><a href="RSDataset26.m" target="_blank" rel="noopener noreferrer">The Q[26] RSDataset</a></li>
+            <li><a href="RSDataset27.m" target="_blank" rel="noopener noreferrer">The Q[27] RSDataset</a></li>
+            <li><a href="RSDataset28.m" target="_blank" rel="noopener noreferrer">The Q[28] RSDataset</a></li>
+            <li><a href="RSDataset29.m" target="_blank" rel="noopener noreferrer">The Q[29] RSDataset</a></li>
+            <li><a href="RSDataset30.m" target="_blank" rel="noopener noreferrer">The Q[30] RSDataset</a></li>
+          </ul>
+
+        </details>
 
       </div>
     </div>
@@ -216,7 +269,7 @@
 
         <ul>
           <li><strong>Last Updated:</strong> 4/16/2026</li>
-          <li>Short descriptions provided in comments above each proc.</li>
+          <li>Short descriptions provided in comments above each procedure.</li>
         </ul>
 
       </div>
