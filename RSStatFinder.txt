@@ -1,0 +1,69 @@
+with(combinat):
+read "RSDataset.m":
+
+#Proc to pull a random SYT P from dataset Q
+RandP:=proc():
+local i, j:
+i:=rand(1..n)():
+j:=rand(1..nops(Q[i]))():
+Q[i][j][2][1];
+end proc:
+
+#Proc to pull a random SYT Q from dataset Q
+RandQ:=proc():
+local i, j:
+i:=rand(1..n)():
+j:=rand(1..nops(Q[i]))():
+Q[i][j][2][2];
+end proc:
+
+#Proc to pull a random SYT P from dataset Q with n=n
+RandPn:=proc(n):
+local j:
+j:=rand(1..nops(Q[n]))():
+Q[n][j][2][1];
+end proc:
+
+#Proc to pull a random SYT Q from dataset Q with n=n
+RandQn:=proc(n):
+local j:
+j:=rand(1..nops(Q[n]))():
+Q[n][j][2][2];
+end proc:
+
+#Proc to find the sum of rows and return as a vector
+RowSum:=proc(SYT):
+local L, i, n:
+n:=nops(SYT):
+L:=Array(1..n):
+for i from 1 to n do
+L[i]:=convert(SYT[i],`+`):
+end do;
+convert(L, list);
+end proc:
+
+#Proc to find the sum of cols and return as a vector
+ColSum:=proc(SYT):
+local L, i, n, s, j, m:
+n:=nops(SYT[1]):
+m:=nops(SYT):
+L:=Array(1..n):
+for j from 1 to n do
+s:=0:
+for i from 1 to m do
+if j <= nops(SYT[i]) then
+s:=s + SYT[i][j];
+end if;
+end do;
+L[j]:=s:
+end do;
+convert(L, list);
+end proc:
+
+#Finds Index of value x in SYT [row,col]
+FindSYTdex:=proc(SYT,x):
+local i, j:
+for i from 1 to nops(SYT) do
+for j from 1 to nops(SYT[i]) do
+if SYT[i][j]=x then return([i,j]); end if;
+end do; end do; end proc:
