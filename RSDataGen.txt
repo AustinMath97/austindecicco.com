@@ -1,0 +1,150 @@
+################################################################################################################################################################################################
+
+#CLASS STUFF
+
+with(combinat):
+
+#SYT(L): The SET of Standard Young tableaux of shape L
+SYT:=proc(L) option remember: local i, k, n, S, L1, S1, s1: k:=nops(L): n:=add(L[i],i=1..k): if k=0 then RETURN({[]}); end if; S:={}:
+for i from 1 to k-1 do if L[i]>L[i+1] then L1:=[op(1..i-1,L),L[i]-1,op(i+1..k,L)]; S1:=SYT(L1);
+S:=S union {seq([op(1..i-1,s1),[op(s1[i]),n],op(i+1..k,s1)],s1  in S1)}; end if; end do;
+if L[k]>1 then L1:=[op(1..k-1,L),L[k]-1]; S1:=SYT(L1); S:=S union {seq([op(1..k-1,s1),[op(s1[k]),n]],s1  in S1)};
+else L1:=[op(1..k-1,L)]; S1:=SYT(L1); S:=S union {seq([op(1..k-1,s1), [n]],s1  in S1)}; end if; S; end proc:
+
+#PSYT(Y): prints the SYT Y
+PSYT:=proc(Y): local i: for i from 1 to nops(Y) do lprint(op(Y[i])): end do; end proc:
+
+#RS11(a,i): inputs an INCREASING list of positive integers, a, and another positive integer i outputs a pair a1,j, where (usually a1 is of the same length as a)
+#and i is put where it belongs and j is the entry that it bumped, unless i is larger than all the members of a (i.e. larger than a[-1]) then a1 is [op(a),i], and j is 0
+RS11:=proc(a,i): local k, j: k:=nops(a): for j from 1 to k while a[j]<i do end do; if j=k+1 then RETURN([op(a),i],0); end if; [op(1..j-1,a),i,op(j+1..k,a)],a[j]; end proc:
+
+NuSYTpairs:=proc(n) option remember: local S, P, p: P:=Par(n): S:=0: for p in P do S:=S+NuSYT(p)^2: end do; S; end proc:
+
+SYTpairs:=proc(n) option remember: local S, P, p, S1, s1, s2: P:=Par(n): S:={}: for p in P do S1:=SYT(p):
+S:= S union {seq(seq([s1,s2], s1 in S1), s2 in S1)}: end do; S; end proc:
+
+#NuSYT(L): The NUMBER of Standard Young tableaux of shape L
+NuSYT:=proc(L) option remember: local i, k, S, L1: k:=nops(L): if k=0 then RETURN(1); end if; S:=0: for i from 1 to k-1 do if L[i]>L[i+1] then
+L1:=[op(1..i-1,L),L[i]-1,op(i+1..k,L)]; S:=S+NuSYT(L1); end if; end do; if L[k]>1 then L1:=[op(1..k-1,L),L[k]-1]; S:=S+ NuSYT(L1); else
+L1:=[op(1..k-1,L)]; S:=S+NuSYT(L1); end if; S; end proc:
+
+#RS1(Y,i): inputs a partial Young tableau and another integer i NOT yet in Y places it in the right place,
+#by a bumping process it returns a tableau with one more box followed by the name of the row where it settled
+RS1:=proc(Y,i): local k, NewY, lucy, bumpee, i1, j: if Y=[] then RETURN([[i]],1); end if; k:=nops(Y):
+lucy:=RS11(Y[1],i): NewY[1]:=lucy[1]: bumpee:=lucy[2]: if bumpee=0 then RETURN([NewY[1],op(2..k,Y)],1);
+end if; for i1 from 2 to k  while bumpee<>0 do lucy:=RS11(Y[i1],bumpee): NewY[i1]:=lucy[1]: bumpee:=lucy[2]:
+if bumpee=0 then RETURN([seq(NewY[j],j=1..i1),op(i1+1..k,Y)],i1); end if; end do; [seq(NewY[j],j=1..k),[bumpee]],k+1; end proc:
+
+#RS(pi): inputs a permutation pi of ({1, ..., n:=nops(pi)) and outputs a pair of SYT of the SAME shape (with n boxes) The Robinson-Schenstead algorithm
+RS:=proc(pi): local Yl, i, Yr, eaea, p: if pi=[] then RETURN([[],[]]); end if; Yl:=[[pi[1]]]: Yr:=[[1]]: for i from 2 to nops(pi) do eaea:=RS1(Yl,pi[i]):
+Yl:=eaea[1]: p:=eaea[2]: if p<=nops(Yr) then Yr:=[op(1..p-1,Yr),[op(Yr[p]),i],op(p+1..nops(Yr),Yr)]; else Yr:=[op(Yr),[i]]; end if; end do; [Yl, Yr]; end proc:
+
+#RSeft(pi): inputs a permutation pi (of size nops(pi)) and outputs of whatever shape (with n boxes)
+RSleft:=proc(pi): local Y, i: Y:=[]: for i from 1 to nops(pi) do Y:=RS1(Y,pi[i])[1]: end do; Y; end proc:
+
+#Cells(L): the set of n (=sum(L)) cells [i,j] in the shape L
+Cells:=proc(L): local k, i, j: k:=nops(L): {seq(seq([i,j],j=1..L[i]),i=1..k)}; end proc:
+
+Conj:=proc(L) option remember: local k, C1, i1, L1, i: if L=[] then RETURN([]); end if; k:=nops(L): L1:=[seq(L[i]-1,i=1..k)]:
+for i1 from 1 to nops(L1) while L1[i1]>0 do end do; i1:=i1-1: L1:=[op(1..i1,L1)]: C1:=Conj(L1): [k,op(C1)]; end proc:
+
+#Hook(L,c): The set of the cells in the hook corresponding to the cell c=[i,j] (i.e. the set of cells to the right and to the bottom of c)
+Hook:=proc(L,c): local k, i, j, C, i1, j1, i2: k:=nops(L): i:=c[1]: j:=c[2]: if not (i>=1 and i<=k) then RETURN(FAIL); end if;
+if not(j>=1 and j<=L[i]) then RETURN(FAIL); end if; C:={seq([i,j1],j1=j..L[i])}: for i2 from i to k while j<=L[i2] do end do;
+i2:=i2-1: C:=C union {seq([i1,j],i1=i..i2)}: end proc:
+
+#HL(L,c): the hook-length of cell c in the shape L
+HL:=proc(L,c): nops(Hook(L,c)); end proc:
+
+HLc:=proc(L,c): local i, j, L1: L1:=Conj(L): i:=c[1]: j:=c[2]: L[i]-j+L1[j]-i+1; end proc:
+
+#NuSYTc(L): implementing the Frame-Robinson-Thrall Hook Length Formula
+NuSYTc:=proc(L): local n, C, i, c: n:=add(L[i],i=1..nops(L)): C:=Cells(L): n!/mul(HL(L,c),c in C); end proc:
+
+#NuSYTcc(L): implementing the Frame-Robinson-Thrall Hook Length Formula Cleverly
+NuSYTcc:=proc(L): local n, C, i, c: n:=add(L[i],i=1..nops(L)): C:=Cells(L): n!/mul(HLc(L,c),c in C); end proc:
+
+#PlotDist(f,x): plots the prob. distribution inspired by the weight enumerator f in the variable x after it is turned to a prob. distribution (after dividing by subs(x=1,f)
+PlotDist:=proc(f,x): local f1, i: f1:=f/subs(x=1,f): plot([seq([i,coeff(f1,x,i)],i=ldegree(f1,x)..degree(f1,x))]); end proc:
+
+#WtE(S,f,x): the weight-enumerator of the set S according to the statistic f(s) WtE(permute(5), pi->nops(RS(pi)[1]),x);
+WtE:=proc(S,f,x): local s: add(x^f(s),s in S); end proc:
+
+Moms:=proc(f,x,r): local mu, L, f1, sig, i: f1:=f/subs(x=1,f): mu:=subs(x=1,diff(f1,x)): L:=[mu]: f1:=f1/x^mu: f1:=x*diff(f1,x): f1:=x*diff(f1,x): sig:=sqrt(subs(x=1,f1)):
+L:=[mu,sig]: for i from 3 to r do f1:=x*diff(f1,x): L:=[op(L), subs(x=1,f1)]: end do; L; end proc:
+
+SMoms:=proc(f,x,r): local L, sig, i: L:=Moms(f,x,r): sig:=L[2]: [op(1..2,L),seq(L[i]/sig^i,i=3..r)]; end proc:
+
+OT:=proc(L): local n, c: n:=convert(L,`+`): c:=Cells(L)[rand(1..n)()]: while HLc(L,c)>1 do c:=Hook(L,c)[rand(1..HLc(L,c))()]: end do; c; end proc:
+
+#RandSYT(L): a random SYT of shape L
+RandSYT:=proc(L): local k, c, i, L1, n, Y1: if L=[1] then RETURN([[1]]); end if; n:=convert(L,`+`): k:=nops(L): c:=OT(L): i:=c[1]: L1:=[op(1..i-1,L),L[i]-1,op(i+1..k,L)]:
+if L1[-1]=0 then L1:=[op(1..nops(L1)-1,L1)]; end if; Y1:=RandSYT(L1): if nops(L1)=k then [op(1..i-1,Y1),[op(Y1[i]),n],op(i+1..k,Y1)]; else [op(1..k-1,Y1),[n]]; end if; end proc:
+
+################################################################################################################################################################################################
+
+#DATASET STUFF
+
+#n-perm size. N-number of obs
+RSnDataset:=proc(n, N):
+local S, L, i, p, total:
+
+if N < n! + 1 then
+L:=Array(1..N);
+for i from 1 to N do
+p:=randperm(n):
+L[i]:=[p, RS(p)]:
+end do;
+return(convert(L, list));
+
+else
+S:=permute(n);
+total:=n!;
+L:=Array(1..total);
+for i to total do
+p:=S[i]:
+L[i]:=[p, RS(p)]:
+end do;
+return(convert(L, list));
+end if;
+
+end proc:
+
+#n-perm size stopping point. N-number of obs
+RSDataset:=proc(n, N):
+local L, i:
+L:=Array(1..n):
+for i from 1 to n do
+L[i]:=RSnDataset(i, N):
+end do;
+convert(L, list);
+end proc:
+
+#DO NOT RUN THE COMMENTED OUT PART AND REDEFINE Q
+
+#n:=30:
+#N:=3000:
+#Q:=RSDataset(n,N):
+#save Q, n, N, "RSDataset.m":
+#save Q, n, N, "RSDataset.mpl":
+#for i from 1 to nops(Q) do
+#assign(cat('Q', i) = Q[i]);
+#save cat('Q', i), cat("RSDataset", i, ".m"):
+#end do;
+
+#Use this format to read in
+#read "RSDataset.m":
+
+#Description of the dataset Q, Q is a list of lists of pairs of [[permutation],[P,Q]] where [P,Q] is the pair derived from RS(permutation)
+#The first index of Q, Q[i] describes the lists of these pairs for n=i, i has range 1..nops(Q)
+#The second index of Q, Q[i][j], selects the pair j=[[permutation],[P,Q]] from the list of pairs of with n=i, j has range 1..obs or 1..nops(Q)!
+#The third index of Q, Q[i][j][k], has two values k=1,2, and either selects the [permutation] for k=1 or [P,Q] for k=2
+#The forth index of Q, Q[i][j][k][l], either selects the value at permutation index l if k=1 or P or Q if k=2, thus l is limited to the range 1..n for k=1, and 1,2 for k=2
+#The fifth index of Q, Q[i][j][k][l][m], selects rows of P or Q
+#The sixth index of Q, Q[i][j][k][l][m][o], selects index values of rows of P or Q
+
+#Q is saved in both .m and .mpl formats, use .m if you can as it is faster and smaller, .mpl is human readable while .m is not
+
+#We also have the datasets "RSDatasetX.m" which has variable QX=Q[X], and thus up to 5 indexs QX[j][k][l][m][o]
+
+################################################################################################################################################################################################
