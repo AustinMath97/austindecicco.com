@@ -31,6 +31,21 @@ j:=rand(1..nops(Q[n]))():
 Q[n][j][2][2];
 end proc:
 
+#Proc to pull a random SYT pair from dataset Q
+RandPQ:=proc():
+local i, j:
+i:=rand(1..n)():
+j:=rand(1..nops(Q[i]))():
+Q[i][j][2];
+end proc:
+
+#Proc to pull a random SYT pair from dataset Q with n=n
+RandPQn:=proc(n):
+local j:
+j:=rand(1..nops(Q[n]))():
+Q[n][j][2];
+end proc:
+
 #Proc to find the sum of rows and return as a vector
 RowSum:=proc(SYT):
 local L, i, n:
@@ -39,7 +54,7 @@ L:=Array(1..n):
 for i from 1 to n do
 L[i]:=convert(SYT[i],`+`):
 end do;
-convert(L, list);
+convert(L,list);
 end proc:
 
 #Proc to find the sum of cols and return as a vector
@@ -57,13 +72,70 @@ end if;
 end do;
 L[j]:=s:
 end do;
-convert(L, list);
+convert(L,list);
 end proc:
 
 #Finds Index of value x in SYT [row,col]
 FindSYTdex:=proc(SYT,x):
 local i, j:
-for i from 1 to nops(SYT) do
-for j from 1 to nops(SYT[i]) do
+for i from 1 to min(nops(SYT),x) do
+for j from 1 to min(nops(SYT[i]),x) do
 if SYT[i][j]=x then return([i,j]); end if;
 end do; end do; end proc:
+
+########################################################################################################################
+
+Digits:=20:
+
+#Average proc for lists
+Av:=proc(L): local n, i: n:=nops(L): evalf(add(L[i],i=1..n)/n); end proc:
+
+#Calculates the mean of populations of column/row sums
+VSMean:=proc(L):
+local n, S, j, i, K, M: n:=nops(L): S:=Array(1..n): K:=Array(1..30): M:=Array(1..n):
+for i from 1 to n do M[i]:=nops(L[i]): end do;
+for i from 1 to 30 do
+for j from 1 to n do
+if i > M[j] then S[j]:=0; else
+S[j]:=L[j][i]; end if;
+end do;
+K[i]:=Av(convert(S,list));
+end do;
+convert(K,list);
+end proc:
+
+#Calculates the SE of populations of column/row sums
+VSSE:=proc(L):
+local n, mu, j, i, K, k, M, S: n:=nops(L): mu:=VSMean(L): K:=Array(1..30): M:=Array(1..n): S:=Array(1..n):
+for i from 1 to n do M[i]:=nops(L[i]): end do;
+for i from 1 to 30 do
+for j from 1 to n do
+if i > M[j] then S[j]:=0; else
+S[j]:=L[j][i]; end if;
+end do;
+K[i]:=evalf(sqrt(add((S[k]-mu[i])^2,k=1..n))/n);
+end do;
+convert(K,list);
+end proc:
+
+#Bootstrapping proc for row/col sums where we partition the data on values of n:
+
+BootRowColbyn:=proc():
+local n, i, PRmn, QRmn, PCmn, QCmn, PRsn, QRsn, PCsn, QCsn:
+PRmn:=[seq(VSMean([seq(RowSum(RandPn(n)),i=1..3000)]),n=1..30)]:
+PCmn:=[seq(VSMean([seq(ColSum(RandPn(n)),i=1..3000)]),n=1..30)]:
+PRsn:=[seq(VSSE([seq(RowSum(RandPn(n)),i=1..3000)]),n=1..30)]:
+PCsn:=[seq(VSSE([seq(ColSum(RandPn(n)),i=1..3000)]),n=1..30)]:
+QRmn:=[seq(VSMean([seq(RowSum(RandQn(n)),i=1..3000)]),n=1..30)]:
+QCmn:=[seq(VSMean([seq(ColSum(RandQn(n)),i=1..3000)]),n=1..30)]:
+QRsn:=[seq(VSSE([seq(RowSum(RandQn(n)),i=1..3000)]),n=1..30)]:
+QCsn:=[seq(VSSE([seq(ColSum(RandQn(n)),i=1..3000)]),n=1..30)]:
+[PRmn,QRmn,PCmn,QCmn,PRsn,QRsn,PCsn,QCsn]; end proc:
+
+#BRCN:=BootRowColbyn(): save BRCN, "BRCNDataset.m": save BRCN, "BRCNDataset.mpl":
+
+#Description of the dataset BRCN
+#The first index of BRCN, BRCN[i] picks the type of statistical data i in [1..8]
+#i = 1: Row mean of P, i = 2: Col mean of P, i = 3: Row se of P, i = 4: Col se of P
+#i = 5: Row mean of Q, i = 6: Col mean of Q, i = 7: Row se of Q, i = 8: Col se of Q
+#The second index of BRCN, BRCN[i][j] picks the value of n, n=j j in [1..30]

@@ -1,0 +1,167 @@
+#OK to post homework
+#Austin DeCicco, 4/18/26, Assignment 23
+
+#BEGIN REFORMATTED C21
+############################################################################################################################################################
+
+with(combinat):
+
+#SubsPi(f,x,pi): inputs a polynomial f(x[1], ..., x[n]) (n:=nops(pi)) and ouputs the new polynomial obtained by substituting x[i]->x[pi[i]]
+SubsPi:=proc(f,x,pi): local n, i: n:=nops(pi): subs({seq(x[i]=x[pi[i]],i=1..n)},f); end proc:
+
+#IsSymS(f,x,n): checks that all the images of f under the symmetric group coincide with f (that is a symmetric polynomial)
+IsSymS:=proc(f,x,n): local Sn, pi: Sn:=permute(n): evalb({seq(SubsPi(f,x,pi), pi in Sn)}={f}); end proc:
+
+#IsSym(f,x,n): checks that f(x[1], ..., x[n]) is symmetric the Pablo way
+IsSym:=proc(f,x,n): local i: evalb({seq(subs({x[i]=x[i+1],x[i+1]=x[i]},f),i=1..n-1)}={f}); end proc:
+
+#Symm(f,x,n): inputs an ARBITRARY polynomial f(x[1],...,x[n]) and outputs the sum of all the images of f under S_n
+Symm:=proc(f,x,n): local Sn, pi: Sn:=permute(n): add(SubsPi(f,x,pi), pi in Sn); end proc:
+
+#rSymm(f,x,n): inputs an ARBITRARY polynomial f(x[1],...,x[n]) and outputs the sum of all the distinct images
+rSymm:=proc(f,x,n): local Sn, pi: Sn:=permute(n): convert({seq(SubsPi(f,x,pi), pi in Sn)}, `+`); end proc:
+
+#Park(n,k): The set of partitions of n into exactly k parts
+Park:=proc(n,k) option remember: local S, k1, S1, s1: if n<k then RETURN({}); end if; if k=0 then if n=0 then RETURN({[]}); else RETURN({}); end if; end if;
+S:={}: for k1 from 0 to k do S1:=Park(n-k,k1): S:= S union {seq([op(s1+[1$k1]),1$(k-k1)], s1 in S1)}: end do; S; end proc:
+
+#Par(n): The set of partitions of n, the clever way.
+Par:=proc(n): local k: {seq(op(Park(n,k)), k=1..n)}; end proc:
+
+#mL(x,n,L): inputs a variable name x a positive integer n and an integer partition L outputs the symmetrizer of x[1]^L[1]*...*x[nops(L)]^L[nops(L)], m_L(x[1], ..., x[n]) MONOMIAL symmetric polymomial
+mL:=proc(x,n,L): local k, i: k:=nops(L): rSymm(mul(x[i]^L[i],i=1..k),x,n); end proc:
+
+#ekn(k,n,x): The elementary symmetric polynomial of degree k in x[1], ..., x[n]
+ekn:=proc(k,n,x): rSymm(mL(x,n,[1$k]),x,n); end proc:
+
+#pkn(k,n,x): The power symmetric polynomial
+pkn:=proc(k,n,x): rSymm(mL(x,n,[k]),x,n); end proc:
+
+#eknC(k,n,x): A cleverer way to output e_k(x[1], ..., x[n])
+eknC:=proc(k,n,x) option remember: if k>n then RETURN(0); end if; if n=0 then if k=0 then RETURN(1); else RETURN(0); end if; end if; expand(eknC(k,n-1,x)+ x[n]*eknC(k-1,n-1,x)); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C21
+
+#BEGIN REFORMATTED C22
+############################################################################################################################################################
+
+with(linalg):
+
+#mBase: The basis of Monomial Symmetric polynomial of total degree n
+mBase:=proc(n,x): local P, i: P:=Par(n): [seq(mL(x,n,P[i]),i=1..nops(P))]; end proc:
+
+#eBase(n,x): The e-base of the algebra of symmetric polynomials of degree n in x[1],...,x[n]
+eBase:=proc(n,x): local P, i, j: P:=Par(n): expand([seq(mul(ekn(P[i][j],n,x),j=1..nops(P[i])),i=1..nops(P))]); end proc:
+
+#pBase(n,x): The p-base of the algebra of symmetric polynomials of degree n in x[1],...,x[n]
+pBase:=proc(n,x): local P, i, j: P:=Par(n): expand([seq(mul(pkn(P[i][j],n,x),j=1..nops(P[i])),i=1..nops(P))]); end proc:
+
+#hkn(k,n,x): A cleverer way to output h_k(x[1], ..., x[n])
+hkn:=proc(k,n,x) option remember: if k=0 then RETURN(1); end if; if n=0 then if k=0 then RETURN(1); else RETURN(0); end if; end if; expand(hkn(k,n-1,x)+ x[n]*hkn(k-1,n,x)); end proc:
+
+#hBase(n,x): The e-base of the algebra of symmetric polynomials of degree n in x[1],...,x[n]
+hBase:=proc(n,x): local P, i, j: P:=Par(n): expand([seq(mul(hkn(P[i][j],n,x),j=1..nops(P[i])),i=1..nops(P))]); end proc:
+
+#Coe(f,x,L): inputs any polynomial f of x[1], ..., x[n], and a list of integers L output the coeff. of x[1]^L[1]*x[2]^L[2]*...
+Coe:=proc(f,x,L): local c, i: c:=f: for i from 1 to nops(L) do c:=coeff(c,x[i],L[i]): end do; c; end proc:
+
+#mVec(f,x,n): inputs a symmetric poly of x[1], ..., x[n] of (total) degree n outputs the coeffi vector (of length nops(Par(n)) when you express it in terms of m-bases
+mVec:=proc(f,x,n): local P, i: P:=Par(n): [seq(Coe(f,x,P[i]),i=1..nops(P))]; end proc:
+
+#eTOmMat(n): The nops(Par(n)) by nops(Par(n)) matrix whose [i,j] entry is the coefficient of  mBase(n)[j] in eBase(n)[i], i.e. when eBase(n)[i] is expressed as a linear combination of m_L).
+eTOmMat:=proc(n): local EB, x, i: EB:=eBase(n,x): matrix([seq(mVec(EB[i],x,n),i=1..nops(EB))]); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C22
+
+#BEGIN REFORMATTED C23
+############################################################################################################################################################
+
+pTOmMat:=proc(n): local EB, x, i: EB:=pBase(n,x): matrix([seq(mVec(EB[i],x,n),i=1..nops(EB))]); end proc:
+
+#inv(pi): The number of inversions of the per. pi
+inv:=proc(pi): local n, i, j, co: n:=nops(pi): co:=0: for i from 1 to n do for j from i+1 to n do if pi[i]>pi[j] then co:=co+1; end if; end do; end do; co; end proc:
+
+#IsASymS(f,x,n): checks that all the images of f under the symmetric group coincide with the sign of the perm. times f (that is an anti-symmetric polynomial)
+IsASymS:=proc(f,x,n): local Sn, pi: Sn:=combinat[permute](n): evalb(expand({seq((-1)^inv(pi)*SubsPi(f,x,pi), pi in Sn)})={expand(f)}); end proc:
+
+#IsASym(f,x,n): checks that f(x[1], ..., x[n]) is symmetric the Pablo way
+IsASym:=proc(f,x,n): local i: evalb(expand({seq(subs({x[i]=x[i+1],x[i+1]=x[i]},f),i=1..n-1)})={expand(-f)}); end proc:
+
+#Symm(f,x,n): inputs an ARBITRARY polynomial f(x[1],...,x[n]) and outputs the sum of all the images of f under S_n
+Symm:=proc(f,x,n): local Sn, pi: Sn:=permute(n): add(SubsPi(f,x,pi), pi in Sn); end proc:
+
+#ASymm(f,x,n): inputs an ARBITRARY polynomial f(x[1],...,x[n]) and outputs the sum of all the images of f under S_n times the sign of the perm.
+ASymm:=proc(f,x,n): local Sn, pi, i, F: Sn:=combinat[permute](n): F:=0: for i from 1 to nops(Sn) do F:=F+(-1)**inv(Sn[i])*SubsPi(f,x,Sn[i]): end do; F; end proc:
+
+#Sc(x,L): Inputs a partion L (of n, say) and outputs s_L(x[1], ..., x[n])
+Sc:=proc(x,L): local L1, i, j, k, n: n:=convert(L,`+`): k:=nops(L): L1:=[op(L),0$(n-k)]: L1:=[seq(L1[i]+n-i,i=1..n)]:
+normal(ASymm(mul(x[i]^L1[i],i=1..n),x,n)/mul(mul(x[i]-x[j],j=i+1..n),i=1..n)); end proc:
+
+#ScBase(n,x): The Schur-base of the algebra of symmetric polynomials of degree n in x[1],...,x[n]
+ScBase:=proc(n,x): local P, i, j: P:=Par(n): expand([seq(Sc(x,P[i]),i=1..nops(P))]); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C23
+
+#1. (i) Write a procedure ScTOmMat(n) that outputs the transition matrix from the interesting Schur-basis to the boring m-Bases.
+#   (ii) Check that ScTOmMat(n), for n from 2 to 6 agree with the so-called Kostka matrices given on p. 59 of I.G. Macdonald's Classic book .
+#   (iii) Find ScToMat(7) and ScToMat(8), i.e. the Kostka matrices for n=7 and n=8 respectively
+
+ScTOmMat:=proc(n): local EB, x, i: EB:=ScBase(n,x): matrix([seq(mVec(EB[i],x,n),i=1..nops(EB))]); end proc:
+
+#Verfiying validity of Sc2M transformation
+EvalSc2M:=proc(n):
+local tr, S, i, j, m:
+tr:=ScTOmMat(n): m:=nops(Par(n)):
+S:={seq(evalb(expand(ScBase(n,x)[i])=expand(add(mBase(n,x)[j]*tr[i,j],j=1..m))),i=1..m)}:
+if nops(S) > 1 then return(false); end if; S[1]; end proc:
+
+#While the Matrices generated by ScTOmMat do not match the matrices provided on p. 59 of I.G. Macdonald's Classic book, they do appear to be valid.
+#Perhaps they are equivalent due to a different ordering of the basis.
+
+#ScTOmMat(7);
+#Output: [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+#, [0, 1, 0, 0, 2, 2, 1, 0, 4, 3, 1, 6, 4, 9, 14], [0, 1, 1, 0, 3, 2, 2, 1, 5, 4
+#, 3, 7, 6, 10, 14], [0, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 6], [0, 0, 0, 0,
+#1, 0, 0, 0, 3, 1, 0, 5, 2, 10, 21], [0, 0, 0, 0, 1, 1, 0, 0, 3, 2, 0, 6, 3, 11,
+#21], [0, 0, 0, 0, 2, 1, 1, 0, 6, 4, 2, 11, 8, 20, 35], [0, 0, 0, 0, 1, 1, 1, 1,
+#3, 3, 3, 6, 6, 10, 15], [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 2, 0, 5, 14], [0, 0,
+#0, 0, 0, 0, 0, 0, 2, 1, 0, 6, 3, 15, 35], [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 4,
+#4, 10, 20], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 4, 14], [0, 0, 0, 0, 0, 0,
+#0, 0, 0, 0, 0, 1, 1, 5, 15], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6], [0,
+#0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]]
+
+#ScTOmMat(8);
+#Output: 
+
+#2. Write a procedure J(n) that implements the nops(Par(n)) by nops(Par(n)) matrix J defined on p. 55 of Macdonald's book.
+#   (Hint: look up from a previous class, or do it from scratch, a procedure, Conj(L), that outputs the conjugate partition of L, then write ConjPlace(n,i) that inputs a pos.
+#   integer n, and an integer i, between 1 and nops(Par(n)); and outputs j between 1 and nops(Par(n)) such that Par(n)[j] is the conjugate partition of Par(n)[i])
+
+Conj:=proc(L) option remember: local k, C1, i1, L1, i: if L=[] then RETURN([]); end if; k:=nops(L): L1:=[seq(L[i]-1,i=1..k)]: for i1 from 1 to nops(L1) while L1[i1]>0 do end do;
+i1:=i1-1: L1:=[op(1..i1,L1)]: C1:=Conj(L1): [k,op(C1)]; end proc:
+
+ConjPlace:=proc(n,i): local P, j, c, m: P:=convert(Par(n),list): c:=Conj(P[i]): m:=nops(P): for j from 1 to m do if P[j]=c and j<>i then return j; end if; end do; end proc:
+
+J:=proc(n):
+local M, m, i, j:
+m:=nops(Par(n)):
+M:=Matrix(m,m):
+for i from 1 to m do
+for j from 1 to m do
+if ConjPlace(n,i)=j then
+M[i,j]:=1; else M[i,j]:=0; end if;
+end do; end do; M; end proc:
+
+#3. By using eTOmMat(n) and the inverse of hTOmMat(n), write a one-line procedure eTOhMat(n), check that it agrees with K'JK* given in Table 1 of Macdonald's book (p. 56), for n from 2 to 7.
+#   [Note: K' is the transpose of the matrix K (the command in the linalg package of Maple is transpose) , and K* is the transpose of the inverse of K, (K^(-1))']
+
+hTOmMat:=proc(n): local EB, x, i: EB:=hBase(n,x): matrix([seq(mVec(EB[i],x,n),i=1..nops(EB))]); end proc:
+
+eTOhMat:=proc(n): convert(eTOmMat(n),Matrix).convert(inverse(hTOmMat(n)),Matrix); end proc:
+
+#4. Describe the current state of your final project.
+
+#We have made a dataset to perform bootstrapping on, we have also made some procedures to measure the statistics of interest. All work can be found at https://austindecicco.com/gradp.html
