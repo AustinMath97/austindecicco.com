@@ -1,0 +1,267 @@
+/* ================================
+   GLOBAL BASE STYLES
+   Applies to all pages
+================================ */
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  max-width: 800px;
+  margin: 40px auto;
+  line-height: 1.6;
+  color: #222;
+
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)),
+    url("back.jpg");
+
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  padding: 0 15px;
+}
+
+h1 {
+  font-size: 2.5em;
+  color: #111;
+}
+
+h2 {
+  margin-top: 30px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 4px;
+  font-size: 1.6em;
+}
+
+p {
+  margin-bottom: 12px;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+a {
+  color: #0033cc;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+  color: #0055ff;
+}
+
+footer {
+  margin-top: 40px;
+  color: #666;
+  font-size: 14px;
+}
+
+code {
+  background: #eee;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+
+/* ================================
+   ORANGE BUTTON
+   Used on all subpages (back button)
+   and index.html link list
+================================ */
+
+.orange-button,
+.link-list a {
+  display: inline-block;
+  padding: 8px 14px;
+  background: transparent;
+  border-radius: 6px;
+  border: 2px solid #e67e22;
+  color: #e67e22;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.orange-button:hover,
+.link-list a:hover {
+  background: #ff9900;
+  color: white;
+  border-color: #ff9900;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  text-decoration: none;
+}
+
+
+/* ================================
+   COURSE / SECTION HEADINGS
+   Used on grad.html, undergrad.html,
+   fun.html, gradp.html
+================================ */
+
+h4.course-title,
+h5.course-title {
+  margin-top: 25px;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #333;
+}
+
+
+/* ================================
+   EDUCATION ENTRIES
+   Used on grad.html and undergrad.html
+================================ */
+
+.edu-entry h2 {
+  margin-bottom: 4px;
+}
+
+.edu-entry h3 {
+  margin-top: 0;
+  font-weight: normal;
+  font-size: 1em;
+  color: #555;
+}
+
+
+/* ================================
+   INDEX PAGE — PROFILE HEADER
+   Used only on index.html
+================================ */
+
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-photo {
+  width: 200px;
+  max-width: 40%;
+  height: auto;
+  margin-bottom: 15px;
+  display: block;
+}
+
+.profile-header h1 {
+  text-align: center;
+  margin: 0;
+}
+
+
+/* ================================
+   INDEX PAGE — LINK LIST
+   Used only on index.html
+================================ */
+
+.link-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.link-list li {
+  margin: 10px 0;
+}
+
+
+/* ================================
+   PROJECT CARDS
+   Used on fun.html and gradp.html
+================================ */
+
+.project {
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  border-left: 4px solid #bbb;
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 5px;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.project:hover {
+  border-left: 4px solid #0033cc;
+  background: rgba(255, 255, 255, 0.85);
+  transform: translateY(-1px);
+}
+
+.project a {
+  font-weight: bold;
+  font-size: 1.05em;
+}
+
+.project-desc {
+  margin-top: 6px;
+  font-size: 0.95em;
+  color: #444;
+}
+
+
+/* ================================
+   DATASET DROPDOWN
+   Used only on gradp.html
+================================ */
+
+.dataset-dropdown {
+  margin-top: 10px;
+}
+
+.dataset-dropdown summary {
+  cursor: pointer;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.75);
+  font-weight: 500;
+  transition: all 0.2s ease;
+  list-style: none;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dataset-dropdown summary:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.dataset-dropdown[open] summary {
+  border-color: #0033cc;
+}
+
+.dataset-dropdown summary::before {
+  content: "▶";
+  display: inline-block;
+  transition: transform 0.2s ease;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.dataset-dropdown[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.dataset-dropdown ul {
+  margin-top: 10px;
+}
+
+
+/* ================================
+   RESPONSIVE — MOBILE
+   Applies to all pages
+================================ */
+
+@media (max-width: 480px) {
+  body {
+    padding: 0 10px;
+  }
+
+  .profile-photo {
+    width: 100px;
+    max-width: 50%;
+    margin-bottom: 10px;
+  }
+}
