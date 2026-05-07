@@ -19,119 +19,186 @@
 
   <main>
 
-    <p><a class="orange-button" href="index.html">← Back to Home</a></p>
+    <p><a class="orange-button" href="index.html">&#8592; Back to Home</a></p>
 
     <h2>Graduate Projects</h2>
 
     <p>Here is a collection of some of my graduate projects, past and present.<br>
        This page mainly serves as a file share for my collaborators, some crucial files and project details may be missing.</p>
 
+    <!-- =============================================
+         PROJECT: RS ALGORITHM
+         ============================================= -->
+
     <h4 class="course-title">
-      Experiments with the Robinson-Schensted algorithm, Bootstrap method to find statistical properties of permutations reflected by the RS algorithm:
+      Statistical Properties of Permutations and SYT reflected by the Robinson Schensted Algorithm:
     </h4>
 
+    <!-- PAPER & SLIDES -->
+    <h5 class="course-title section-label">Paper &amp; Slides</h5>
+
     <div class="project">
-      <a href="RSDataGen.txt" target="_blank" rel="noopener noreferrer">Procedures to generate the dataset</a>
+      <a href="Statistical_Properties_of_Permutations_and_Standard_Young_Tableau_reflected_by_the_Robinson_Schensted_Algorithm__Austin_DeCicco__Jike_Liu.pdf"
+         target="_blank" rel="noopener noreferrer">Research Paper (PDF)</a>
 
       <div class="project-desc">
-
         <p>
-          This is here as a guide to how to use the dataset as well as a reference to see how it was constructed.
+          Full written paper covering all four experimental directions: the Logan-Shepp
+          limit shape and convergence of &lambda;<sub>1</sub>/&#8730;<i>n</i> to 2; covariance
+          and correlation between longest increasing and decreasing subsequence lengths;
+          location statistics of a fixed entry <i>m</i> in the insertion and recording
+          tableaux and the asymptotic independence conjecture; and row/column sum vector
+          uniqueness questions for standard Young tableaux with novel integer sequences.
         </p>
-
         <ul>
-          <li><strong>Last Updated:</strong> 4/16/2026</li>
+          <li><strong>Authors:</strong> Austin DeCicco, Jike Liu</li>
+          <li><strong>Last Updated:</strong> May 7, 2026</li>
         </ul>
-
-        <details class="dataset-dropdown">
-          <summary><strong>Expand RSDataset Files</strong></summary>
-
-          <div class="download-controls" style="margin-top: 12px;">
-            <a class="download-btn primary" href="RSDataset.mpl" target="_blank" rel="noopener noreferrer">Full Dataset (Human Readable)</a>
-            <a class="download-btn primary" href="RSDataset.m" target="_blank" rel="noopener noreferrer">Full Dataset (.m)</a>
-          </div>
-
-          <div class="batch-label">Q[1] - Q[10]:</div>
-          <div class="download-controls">
-            <a class="download-btn" href="RSDataset1.m" target="_blank" rel="noopener noreferrer">Q[1]</a>
-            <a class="download-btn" href="RSDataset2.m" target="_blank" rel="noopener noreferrer">Q[2]</a>
-            <a class="download-btn" href="RSDataset3.m" target="_blank" rel="noopener noreferrer">Q[3]</a>
-            <a class="download-btn" href="RSDataset4.m" target="_blank" rel="noopener noreferrer">Q[4]</a>
-            <a class="download-btn" href="RSDataset5.m" target="_blank" rel="noopener noreferrer">Q[5]</a>
-            <a class="download-btn" href="RSDataset6.m" target="_blank" rel="noopener noreferrer">Q[6]</a>
-            <a class="download-btn" href="RSDataset7.m" target="_blank" rel="noopener noreferrer">Q[7]</a>
-            <a class="download-btn" href="RSDataset8.m" target="_blank" rel="noopener noreferrer">Q[8]</a>
-            <a class="download-btn" href="RSDataset9.m" target="_blank" rel="noopener noreferrer">Q[9]</a>
-            <a class="download-btn" href="RSDataset10.m" target="_blank" rel="noopener noreferrer">Q[10]</a>
-          </div>
-
-          <div class="batch-label">Q[11] - Q[20]:</div>
-          <div class="download-controls">
-            <a class="download-btn" href="RSDataset11.m" target="_blank" rel="noopener noreferrer">Q[11]</a>
-            <a class="download-btn" href="RSDataset12.m" target="_blank" rel="noopener noreferrer">Q[12]</a>
-            <a class="download-btn" href="RSDataset13.m" target="_blank" rel="noopener noreferrer">Q[13]</a>
-            <a class="download-btn" href="RSDataset14.m" target="_blank" rel="noopener noreferrer">Q[14]</a>
-            <a class="download-btn" href="RSDataset15.m" target="_blank" rel="noopener noreferrer">Q[15]</a>
-            <a class="download-btn" href="RSDataset16.m" target="_blank" rel="noopener noreferrer">Q[16]</a>
-            <a class="download-btn" href="RSDataset17.m" target="_blank" rel="noopener noreferrer">Q[17]</a>
-            <a class="download-btn" href="RSDataset18.m" target="_blank" rel="noopener noreferrer">Q[18]</a>
-            <a class="download-btn" href="RSDataset19.m" target="_blank" rel="noopener noreferrer">Q[19]</a>
-            <a class="download-btn" href="RSDataset20.m" target="_blank" rel="noopener noreferrer">Q[20]</a>
-          </div>
-
-          <div class="batch-label">Q[21] - Q[30]:</div>
-          <div class="download-controls">
-            <a class="download-btn" href="RSDataset21.m" target="_blank" rel="noopener noreferrer">Q[21]</a>
-            <a class="download-btn" href="RSDataset22.m" target="_blank" rel="noopener noreferrer">Q[22]</a>
-            <a class="download-btn" href="RSDataset23.m" target="_blank" rel="noopener noreferrer">Q[23]</a>
-            <a class="download-btn" href="RSDataset24.m" target="_blank" rel="noopener noreferrer">Q[24]</a>
-            <a class="download-btn" href="RSDataset25.m" target="_blank" rel="noopener noreferrer">Q[25]</a>
-            <a class="download-btn" href="RSDataset26.m" target="_blank" rel="noopener noreferrer">Q[26]</a>
-            <a class="download-btn" href="RSDataset27.m" target="_blank" rel="noopener noreferrer">Q[27]</a>
-            <a class="download-btn" href="RSDataset28.m" target="_blank" rel="noopener noreferrer">Q[28]</a>
-            <a class="download-btn" href="RSDataset29.m" target="_blank" rel="noopener noreferrer">Q[29]</a>
-            <a class="download-btn" href="RSDataset30.m" target="_blank" rel="noopener noreferrer">Q[30]</a>
-          </div>
-
-        </details>
-
       </div>
     </div>
 
     <div class="project">
-      <a href="RSStatFinder.txt" target="_blank" rel="noopener noreferrer">Procedures for RS stats of interest</a>
+      <a href="Statistical_Properties_of_Permutations_and_Standard_Young_Tableau_reflected_by_the_Robinson_Schensted_Algorithm__Austin_DeCicco__Jike_Liu_Presentation.pdf"
+         target="_blank" rel="noopener noreferrer">Presentation Slides (PDF)</a>
 
       <div class="project-desc">
-
         <p>
-          This will be where we keep the code for procedures we will need to evaluate the RS algo stats.
+          Beamer slides for the course presentation. Walks through background on the RS
+          bijection, Schensted's theorem, Plancherel measure, and all four experimental
+          sections of the paper.
         </p>
-
-        <p><strong>Notes:</strong></p>
-
         <ul>
-          <li><strong>Last Updated:</strong> 4/19/2026</li>
-          <li>Short descriptions provided in comments above each procedure.</li>
+          <li><strong>Last Updated:</strong> May 7, 2026</li>
         </ul>
-
-        <details class="dataset-dropdown">
-          <summary><strong>Expand BRCNDataset Files</strong></summary>
-
-          <div class="download-controls" style="margin-top: 12px;">
-            <a class="download-btn primary" href="BRCNDataset.mpl" target="_blank" rel="noopener noreferrer">Full Dataset (Human Readable)</a>
-            <a class="download-btn primary" href="BRCNDataset.m" target="_blank" rel="noopener noreferrer">Full Dataset (.m)</a>
-          </div>
-
-        </details>
-
       </div>
     </div>
+
+    <!-- MAPLE CODE -->
+    <details class="dataset-dropdown">
+      <summary>Maple Code</summary>
+
+      <div class="project">
+        <a href="RS_Project_Consolidated.txt" target="_blank" rel="noopener noreferrer">RS Project &mdash; All Procedures (Consolidated)</a>
+
+        <div class="project-desc">
+          <p>
+            Single file containing every Maple procedure used across the project,
+            consolidated from all source files. Covers the core RS implementation,
+            longest subsequence routines, dataset generation, Schensted's theorem
+            verification, Logan-Shepp plotting, first-row/first-column Monte Carlo,
+            the asymptotic independence rate tests, the average shape bootstrap,
+            and all row/column sum brute-force procedures. Short descriptions
+            are provided in comments above each procedure, with sample commands
+            at the bottom of the file.
+          </p>
+          <ul>
+            <li><strong>Last Updated:</strong> May 7, 2026</li>
+          </ul>
+        </div>
+      </div>
+    </details>
+
+    <!-- DATASETS -->
+    <details class="dataset-dropdown">
+      <summary>Datasets</summary>
+
+    <div class="project">
+      <a href="RSDataset.mpl" target="_blank" rel="noopener noreferrer">RSDataset &mdash; Primary RS Dataset</a>
+
+      <div class="project-desc">
+        <p>
+          The base dataset for the project. Saves the variable <code>Q</code>, where
+          <code>Q[n][j]</code> is a pair <code>[&pi;, [P, Q]]</code> &mdash; a uniformly
+          sampled permutation from <i>S</i><sub>n</sub> together with its full RS output,
+          both tableaux. Covers <i>n</i> = 1 to 30 with up to 3000 observations per
+          <i>n</i> (exact enumeration for small <i>n</i>). All other datasets are derived
+          from this one.
+        </p>
+        <ul>
+          <li><strong>Last Updated:</strong>May 7, 2026</li>
+        </ul>
+        <div class="download-controls" style="margin-top: 8px;">
+          <a class="download-btn primary" href="RSDataset.mpl" target="_blank" rel="noopener noreferrer">Full Dataset (Human Readable)</a>
+          <a class="download-btn primary" href="RSDataset.m" target="_blank" rel="noopener noreferrer">Full Dataset (.m)</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="project">
+      <a href="AvgShape.mpl" target="_blank" rel="noopener noreferrer">AvgShape &mdash; Average Shape Bootstrap</a>
+
+      <div class="project-desc">
+        <p>
+          Saves the variable <code>AvgShape</code>, a bootstrap summary of RS shape
+          statistics. <code>AvgShape[1][n]</code> is the component-wise sample mean of
+          the shape vector of <i>P</i> over 3000 bootstrap samples at each <i>n</i> from
+          1 to 30, and <code>AvgShape[2][n]</code> is the corresponding standard error.
+          Used for the row-removal heuristic experiments in Section 5 of the paper via
+          <code>AvgnthLength(x)</code>, <code>senthLength(x)</code>, and
+          <code>TestProposition()</code>.
+        </p>
+        <ul>
+          <li><strong>Last Updated:</strong> May 7, 2026</li>
+        </ul>
+        <div class="download-controls" style="margin-top: 8px;">
+          <a class="download-btn primary" href="AvgShape.mpl" target="_blank" rel="noopener noreferrer">Full Dataset (Human Readable)</a>
+          <a class="download-btn primary" href="AvgShape.m" target="_blank" rel="noopener noreferrer">Full Dataset (.m)</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="project">
+      <a href="InDeQDataset.mpl" target="_blank" rel="noopener noreferrer">InDeQDataset &mdash; LIS/LDS Length Pairs</a>
+
+      <div class="project-desc">
+        <p>
+          Saves the variable <code>InDeQ</code>, a flat list of pairs
+          <code>[LIS length, LDS length]</code> = <code>[&lambda;<sub>1</sub>,
+          &lambda;'<sub>1</sub>]</code> extracted from every permutation in
+          <code>RSDataset</code>, ordered by <i>n</i> from 1 to 30. Used by
+          <code>SubseqCov()</code> to compute the sample covariance of <i>R</i><sub>n</sub>
+          and <i>C</i><sub>n</sub> at each <i>n</i>, supporting the conjectures in
+          Section 4 of the paper.
+        </p>
+        <ul>
+          <li><strong>Last Updated:</strong> May 7, 2026</li>
+        </ul>
+        <div class="download-controls" style="margin-top: 8px;">
+          <a class="download-btn primary" href="InDeQDataset.mpl" target="_blank" rel="noopener noreferrer">Full Dataset (Human Readable)</a>
+          <a class="download-btn primary" href="InDeQDataset.m" target="_blank" rel="noopener noreferrer">Full Dataset (.m)</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="project">
+      <a href="BRCNDataset.mpl" target="_blank" rel="noopener noreferrer">BRCNDataset &mdash; Bootstrap Row/Column Sum Statistics</a>
+
+      <div class="project-desc">
+        <p>
+          Saves the variable <code>BRCN</code>, a bootstrap summary of row and column
+          sum vector statistics. <code>BRCN[i][n]</code> is indexed by statistic type
+          <i>i</i> and permutation size <i>n</i> (1 to 30): the eight entries cover the
+          sample mean and standard error of the row sum vector and column sum vector for
+          both <i>P</i> and <i>Q</i>, each averaged over 3000 bootstrap samples. Used
+          for the row/column sum uniqueness experiments in Section 7 of the paper.
+        </p>
+        <ul>
+          <li><strong>Last Updated:</strong> May 7, 2026</li>
+        </ul>
+        <div class="download-controls" style="margin-top: 8px;">
+          <a class="download-btn primary" href="BRCNDataset.mpl" target="_blank" rel="noopener noreferrer">Full Dataset (Human Readable)</a>
+          <a class="download-btn primary" href="BRCNDataset.m" target="_blank" rel="noopener noreferrer">Full Dataset (.m)</a>
+        </div>
+      </div>
+    </div>
+
+    </details>
 
   </main>
 
   <footer>
     <p>Built and Designed by Austin DeCicco</p>
-    <p>Last Updated: April 23, 2026</p>
+    <p>Last Updated: May 7, 2026</p>
   </footer>
 
 </body>

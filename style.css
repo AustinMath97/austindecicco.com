@@ -150,6 +150,17 @@ h5.course-title {
   color: var(--color-heading-sub);
 }
 
+h5.course-title.section-label {
+  margin-top: 22px;
+  margin-bottom: 6px;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 3px;
+}
+
 
 /* ================================
    EDUCATION ENTRIES

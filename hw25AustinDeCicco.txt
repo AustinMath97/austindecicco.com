@@ -1,0 +1,375 @@
+#OK to post homework
+#Austin DeCicco, 4/26/26, Assignment 25
+
+#BEGIN REFORMATTED C12
+############################################################################################################################################################
+
+with(combinat):
+
+#Park(n,k): The set of partitions of n into exactly k parts
+Park:=proc(n,k) option remember: local S, k1, S1, s1: if n<k then RETURN({}); end if; if k=0 then if n=0 then RETURN({[]}); else RETURN({}); end if; end if;
+S:={}: for k1 from 0 to k do S1:=Park(n-k,k1): S:= S union {seq([op(s1+[1$k1]),1$(k-k1)], s1 in S1)}: end do; S; end proc:
+
+#Par(n): The set of partitions of n, the clever way.
+Par:=proc(n): local k: {seq(op(Park(n,k)), k=1..n)}; end proc:
+
+#A41s(N): OEIS sequence A41 done stupidly (construct the actual set) and take the cardinality
+A41s:=proc(N): local n: [seq(nops(Par(n)),n=1..N)]; end proc:
+
+#A41ok(N): OEIS sequence A41 done much more efficiently using Euler's generating function Sum(p(n)*q^n,n=0..infinity)=Prod(1/(1-q^k), k=1..infinity)
+A41ok:=proc(N): local k, f, q: f:=mul(1/(1-q^k),k=1..N): f:=taylor(f,q=0,N+4): [seq(coeff(f,q,k),k=1..N)]; end proc:
+
+#EulerM(N,q): The truncation to 1^N of Prod(1-q^k, k=1..infinity)
+EulerM:=proc(N,q): local f, k: f:=mul(1-q^k,k=1..N): f:=taylor(f,q=0,N+1); end proc:
+
+#ConjP(N): The conjectured powers of the polynomial in EulerM
+ConjP:=proc(N): local j, L: L:=[]: for j from 1 to N while (3*j^2-j)/2<=N do L:=[op(L),(3*j^2-j)/2]: end do; for j from 1 to N while (3*j^2+j)/2<=N do
+L:=[op(L),(3*j^2+j)/2]: end do; sort(L); end proc:
+
+#EPTtest(N): testing Euler's pentagonal numbers (3*j^2+j)/2
+EPTtest:=proc(N): local q, j, f, g, k: f:=mul(1-q^k,k=1..N):
+g:=add((-1)^j*q^((3*j^2+j)/2), j=1..trunc(2*sqrt(N/3)+1))+add((-1)^j*q^((3*j^2-j)/2), j=1..trunc(2*sqrt(N/3)+1)): taylor(f-g,q=0,N+1); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C12
+
+#BEGIN REFORMATTED C13
+############################################################################################################################################################
+
+#PFG(L): The Ferrers graph of the partition L
+PFG:=proc(L): local i: for i from 1 to nops(L) do lprint(1$L[i]): end do; print(`----------------`): end proc:
+
+#SYT(L): The SET of Standard Young tableaux of shape L
+SYT:=proc(L) option remember: local i, k, n, S, L1, S1, s1: k:=nops(L): n:=add(L[i],i=1..k): if k=0 then RETURN({[]}); end if; S:={}:
+for i from 1 to k-1 do if L[i]>L[i+1] then L1:=[op(1..i-1,L),L[i]-1,op(i+1..k,L)]; S1:=SYT(L1);
+S:=S union {seq([op(1..i-1,s1),[op(s1[i]),n],op(i+1..k,s1)],s1  in S1)}; end if; end do;
+if L[k]>1 then L1:=[op(1..k-1,L),L[k]-1]; S1:=SYT(L1); S:=S union {seq([op(1..k-1,s1),[op(s1[k]),n]],s1  in S1)};
+else L1:=[op(1..k-1,L)]; S1:=SYT(L1); S:=S union {seq([op(1..k-1,s1), [n]],s1  in S1)}; end if; S; end proc:
+
+#PSYT(Y): prints the SYT Y
+PSYT:=proc(Y): local i: for i from 1 to nops(Y) do lprint(op(Y[i])): end do; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C13
+
+#BEGIN REFORMATTED C14
+############################################################################################################################################################
+
+#RS11(a,i): inputs an INCREASING list of positive integers, a, and another positive integer i outputs a pair a1,j, where (usually a1 is of the same length as a)
+#and i is put where it belongs and j is the entry that it bumped, unless i is larger than all the members of a (i.e. larger than a[-1]) then a1 is [op(a),i], and j is 0
+RS11:=proc(a,i): local k, j: k:=nops(a): for j from 1 to k while a[j]<i do end do; if j=k+1 then RETURN([op(a),i],0); end if; [op(1..j-1,a),i,op(j+1..k,a)],a[j]; end proc:
+
+NuSYTpairs:=proc(n) option remember: local S, P, p: P:=Par(n): S:=0: for p in P do S:=S+NuSYT(p)^2: end do; S; end proc:
+
+SYTpairs:=proc(n) option remember: local S, P, p, S1, s1, s2: P:=Par(n): S:={}: for p in P do S1:=SYT(p):
+S:= S union {seq(seq([s1,s2], s1 in S1), s2 in S1)}: end do; S; end proc:
+
+#NuSYT(L): The NUMBER of Standard Young tableaux of shape L
+NuSYT:=proc(L) option remember: local i, k, S, L1: k:=nops(L): if k=0 then RETURN(1); end if; S:=0: for i from 1 to k-1 do if L[i]>L[i+1] then
+L1:=[op(1..i-1,L),L[i]-1,op(i+1..k,L)]; S:=S+NuSYT(L1); end if; end do; if L[k]>1 then L1:=[op(1..k-1,L),L[k]-1]; S:=S+ NuSYT(L1); else
+L1:=[op(1..k-1,L)]; S:=S+NuSYT(L1); end if; S; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C14
+
+#BEGIN REFORMATTED C16
+############################################################################################################################################################
+
+#RS1(Y,i): inputs a partial Young tableau and another integer i NOT yet in Y places it in the right place,
+#by a bumping process it returns a tableau with one more box followed by the name of the row where it settled
+RS1:=proc(Y,i): local k, NewY, lucy, bumpee, i1, j: if Y=[] then RETURN([[i]],1); end if; k:=nops(Y):
+lucy:=RS11(Y[1],i): NewY[1]:=lucy[1]: bumpee:=lucy[2]: if bumpee=0 then RETURN([NewY[1],op(2..k,Y)],1);
+end if; for i1 from 2 to k  while bumpee<>0 do lucy:=RS11(Y[i1],bumpee): NewY[i1]:=lucy[1]: bumpee:=lucy[2]:
+if bumpee=0 then RETURN([seq(NewY[j],j=1..i1),op(i1+1..k,Y)],i1); end if; end do; [seq(NewY[j],j=1..k),[bumpee]],k+1; end proc:
+
+#RS(pi): inputs a permutation pi of ({1, ..., n:=nops(pi)) and outputs a pair of SYT of the SAME shape (with n boxes) The Robinson-Schenstead algorithm
+RS:=proc(pi): local Yl, i, Yr, eaea, p: if pi=[] then RETURN([[],[]]); end if; Yl:=[[pi[1]]]: Yr:=[[1]]: for i from 2 to nops(pi) do eaea:=RS1(Yl,pi[i]):
+Yl:=eaea[1]: p:=eaea[2]: if p<=nops(Yr) then Yr:=[op(1..p-1,Yr),[op(Yr[p]),i],op(p+1..nops(Yr),Yr)]; else Yr:=[op(Yr),[i]]; end if; end do; [Yl, Yr]; end proc:
+
+#RSeft(pi): inputs a permutation pi (of size nops(pi)) and outputs of whatever shape (with n boxes)
+RSleft:=proc(pi): local Y, i: Y:=[]: for i from 1 to nops(pi) do Y:=RS1(Y,pi[i])[1]: end do; Y; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C16
+
+#BEGIN REFORMATTED C17
+############################################################################################################################################################
+
+#Cells(L): the set of n (=sum(L)) cells [i,j] in the shape L
+Cells:=proc(L): local k, i, j: k:=nops(L): {seq(seq([i,j],j=1..L[i]),i=1..k)}; end proc:
+
+Conj:=proc(L) option remember: local k, C1, i1, L1, i: if L=[] then RETURN([]); end if; k:=nops(L): L1:=[seq(L[i]-1,i=1..k)]:
+for i1 from 1 to nops(L1) while L1[i1]>0 do end do; i1:=i1-1: L1:=[op(1..i1,L1)]: C1:=Conj(L1): [k,op(C1)]; end proc:
+
+#Hook(L,c): The set of the cells in the hook corresponding to the cell c=[i,j] (i.e. the set of cells to the right and to the bottom of c)
+Hook:=proc(L,c): local k, i, j, C, i1, j1, i2: k:=nops(L): i:=c[1]: j:=c[2]: if not (i>=1 and i<=k) then RETURN(FAIL); end if;
+if not(j>=1 and j<=L[i]) then RETURN(FAIL); end if; C:={seq([i,j1],j1=j..L[i])}: for i2 from i to k while j<=L[i2] do end do;
+i2:=i2-1: C:=C union {seq([i1,j],i1=i..i2)}: end proc:
+
+#HL(L,c): the hook-length of cell c in the shape L
+HL:=proc(L,c): nops(Hook(L,c)); end proc:
+
+HLc:=proc(L,c): local i, j, L1: L1:=Conj(L): i:=c[1]: j:=c[2]: L[i]-j+L1[j]-i+1; end proc:
+
+#NuSYTc(L): implementing the Frame-Robinson-Thrall Hook Length Formula
+NuSYTc:=proc(L): local n, C, i, c: n:=add(L[i],i=1..nops(L)): C:=Cells(L): n!/mul(HL(L,c),c in C); end proc:
+
+#NuSYTcc(L): implementing the Frame-Robinson-Thrall Hook Length Formula Cleverly
+NuSYTcc:=proc(L): local n, C, i, c: n:=add(L[i],i=1..nops(L)): C:=Cells(L): n!/mul(HLc(L,c),c in C); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C17
+
+#BEGIN REFORMATTED C18
+############################################################################################################################################################
+
+Jike:=proc(n,x): local S, pi: S:=permute(n): add(x^nops(RS(pi)[1]),pi in S); end proc:
+
+#PlotDist(f,x): plots the prob. distribution inspired by the weight enumerator f in the variable x after it is turned to a prob. distribution (after dividing by subs(x=1,f)
+PlotDist:=proc(f,x): local f1, i: f1:=f/subs(x=1,f): plot([seq([i,coeff(f1,x,i)],i=ldegree(f1,x)..degree(f1,x))]); end proc:
+
+#WtE(S,f,x): the weight-enumerator of the set S according to the statistic f(s) WtE(permute(5), pi->nops(RS(pi)[1]),x);
+WtE:=proc(S,f,x): local s: add(x^f(s),s in S); end proc:
+
+Moms:=proc(f,x,r): local mu, L, f1, sig, i: f1:=f/subs(x=1,f): mu:=subs(x=1,diff(f1,x)): L:=[mu]: f1:=f1/x^mu: f1:=x*diff(f1,x): f1:=x*diff(f1,x): sig:=sqrt(subs(x=1,f1)):
+L:=[mu,sig]: for i from 3 to r do f1:=x*diff(f1,x): L:=[op(L), subs(x=1,f1)]: end do; L; end proc:
+
+SMoms:=proc(f,x,r): local L, sig, i: L:=Moms(f,x,r): sig:=L[2]: [op(1..2,L),seq(L[i]/sig^i,i=3..r)]; end proc:
+
+OT:=proc(L): local n, c: n:=convert(L,`+`): c:=Cells(L)[rand(1..n)()]: while HLc(L,c)>1 do c:=Hook(L,c)[rand(1..HLc(L,c))()]: end do; c; end proc:
+
+#RandSYT(L): a random SYT of shape L
+RandSYT:=proc(L): local k, c, i, L1, n, Y1: if L=[1] then RETURN([[1]]); end if; n:=convert(L,`+`): k:=nops(L): c:=OT(L): i:=c[1]: L1:=[op(1..i-1,L),L[i]-1,op(i+1..k,L)]:
+if L1[-1]=0 then L1:=[op(1..nops(L1)-1,L1)]; end if; Y1:=RandSYT(L1): if nops(L1)=k then [op(1..i-1,Y1),[op(Y1[i]),n],op(i+1..k,Y1)]; else [op(1..k-1,Y1),[n]]; end if; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C18
+
+#BEGIN REFORMATTED C21
+############################################################################################################################################################
+
+#SubsPi(f,x,pi): inputs a polynomial f(x[1], ..., x[n]) (n:=nops(pi)) and ouputs the new polynomial obtained by substituting x[i]->x[pi[i]]
+SubsPi:=proc(f,x,pi): local n, i: n:=nops(pi): subs({seq(x[i]=x[pi[i]],i=1..n)},f); end proc:
+
+#IsSymS(f,x,n): checks that all the images of f under the symmetric group coincide with f (that is a symmetric polynomial)
+IsSymS:=proc(f,x,n): local Sn, pi: Sn:=permute(n): evalb({seq(SubsPi(f,x,pi), pi in Sn)}={f}); end proc:
+
+#IsSym(f,x,n): checks that f(x[1], ..., x[n]) is symmetric the Pablo way
+IsSym:=proc(f,x,n): local i: evalb({seq(subs({x[i]=x[i+1],x[i+1]=x[i]},f),i=1..n-1)}={f}); end proc:
+
+#Symm(f,x,n): inputs an ARBITRARY polynomial f(x[1],...,x[n]) and outputs the sum of all the images of f under S_n
+Symm:=proc(f,x,n): local Sn, pi: Sn:=permute(n): add(SubsPi(f,x,pi), pi in Sn); end proc:
+
+#rSymm(f,x,n): inputs an ARBITRARY polynomial f(x[1],...,x[n]) and outputs the sum of all the distinct images
+rSymm:=proc(f,x,n): local Sn, pi: Sn:=permute(n): convert({seq(SubsPi(f,x,pi), pi in Sn)}, `+`); end proc:
+
+#Park(n,k): The set of partitions of n into exactly k parts
+Park:=proc(n,k) option remember: local S, k1, S1, s1: if n<k then RETURN({}); end if; if k=0 then if n=0 then RETURN({[]}); else RETURN({}); end if; end if;
+S:={}: for k1 from 0 to k do S1:=Park(n-k,k1): S:= S union {seq([op(s1+[1$k1]),1$(k-k1)], s1 in S1)}: end do; S; end proc:
+
+#Par(n): The set of partitions of n, the clever way.
+Par:=proc(n): local k: {seq(op(Park(n,k)), k=1..n)}; end proc:
+
+#mL(x,n,L): inputs a variable name x a positive integer n and an integer partition L outputs the symmetrizer of x[1]^L[1]*...*x[nops(L)]^L[nops(L)], m_L(x[1], ..., x[n]) MONOMIAL symmetric polymomial
+mL:=proc(x,n,L): local k, i: k:=nops(L): rSymm(mul(x[i]^L[i],i=1..k),x,n); end proc:
+
+#ekn(k,n,x): The elementary symmetric polynomial of degree k in x[1], ..., x[n]
+ekn:=proc(k,n,x): rSymm(mL(x,n,[1$k]),x,n); end proc:
+
+#pkn(k,n,x): The power symmetric polynomial
+pkn:=proc(k,n,x): rSymm(mL(x,n,[k]),x,n); end proc:
+
+#eknC(k,n,x): A cleverer way to output e_k(x[1], ..., x[n])
+eknC:=proc(k,n,x) option remember: if k>n then RETURN(0); end if; if n=0 then if k=0 then RETURN(1); else RETURN(0); end if; end if; expand(eknC(k,n-1,x)+ x[n]*eknC(k-1,n-1,x)); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C21
+
+#BEGIN REFORMATTED C22
+############################################################################################################################################################
+
+with(linalg):
+
+#mBase: The basis of Monomial Symmetric polynomial of total degree n
+mBase:=proc(n,x): local P, i: P:=Par(n): [seq(mL(x,n,P[i]),i=1..nops(P))]; end proc:
+
+#eBase(n,x): The e-base of the algebra of symmetric polynomials of degree n in x[1],...,x[n]
+eBase:=proc(n,x): local P, i, j: P:=Par(n): expand([seq(mul(ekn(P[i][j],n,x),j=1..nops(P[i])),i=1..nops(P))]); end proc:
+
+#pBase(n,x): The p-base of the algebra of symmetric polynomials of degree n in x[1],...,x[n]
+pBase:=proc(n,x): local P, i, j: P:=Par(n): expand([seq(mul(pkn(P[i][j],n,x),j=1..nops(P[i])),i=1..nops(P))]); end proc:
+
+#hkn(k,n,x): A cleverer way to output h_k(x[1], ..., x[n])
+hkn:=proc(k,n,x) option remember: if k=0 then RETURN(1); end if; if n=0 then if k=0 then RETURN(1); else RETURN(0); end if; end if; expand(hkn(k,n-1,x)+ x[n]*hkn(k-1,n,x)); end proc:
+
+#hBase(n,x): The e-base of the algebra of symmetric polynomials of degree n in x[1],...,x[n]
+hBase:=proc(n,x): local P, i, j: P:=Par(n): expand([seq(mul(hkn(P[i][j],n,x),j=1..nops(P[i])),i=1..nops(P))]); end proc:
+
+#Coe(f,x,L): inputs any polynomial f of x[1], ..., x[n], and a list of integers L output the coeff. of x[1]^L[1]*x[2]^L[2]*...
+Coe:=proc(f,x,L): local c, i: c:=f: for i from 1 to nops(L) do c:=coeff(c,x[i],L[i]): end do; c; end proc:
+
+#mVec(f,x,n): inputs a symmetric poly of x[1], ..., x[n] of (total) degree n outputs the coeffi vector (of length nops(Par(n)) when you express it in terms of m-bases
+mVec:=proc(f,x,n): local P, i: P:=Par(n): [seq(Coe(f,x,P[i]),i=1..nops(P))]; end proc:
+
+#eTOmMat(n): The nops(Par(n)) by nops(Par(n)) matrix whose [i,j] entry is the coefficient of  mBase(n)[j] in eBase(n)[i], i.e. when eBase(n)[i] is expressed as a linear combination of m_L).
+eTOmMat:=proc(n): local EB, x, i: EB:=eBase(n,x): matrix([seq(mVec(EB[i],x,n),i=1..nops(EB))]); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C22
+
+#BEGIN REFORMATTED C23
+############################################################################################################################################################
+
+pTOmMat:=proc(n): local EB, x, i: EB:=pBase(n,x): matrix([seq(mVec(EB[i],x,n),i=1..nops(EB))]); end proc:
+
+#inv(pi): The number of inversions of the per. pi
+inv:=proc(pi): local n, i, j, co: n:=nops(pi): co:=0: for i from 1 to n do for j from i+1 to n do if pi[i]>pi[j] then co:=co+1; end if; end do; end do; co; end proc:
+
+#IsASymS(f,x,n): checks that all the images of f under the symmetric group coincide with the sign of the perm. times f (that is an anti-symmetric polynomial)
+IsASymS:=proc(f,x,n): local Sn, pi: Sn:=combinat[permute](n): evalb(expand({seq((-1)^inv(pi)*SubsPi(f,x,pi), pi in Sn)})={expand(f)}); end proc:
+
+#IsASym(f,x,n): checks that f(x[1], ..., x[n]) is symmetric the Pablo way
+IsASym:=proc(f,x,n): local i: evalb(expand({seq(subs({x[i]=x[i+1],x[i+1]=x[i]},f),i=1..n-1)})={expand(-f)}); end proc:
+
+#Symm(f,x,n): inputs an ARBITRARY polynomial f(x[1],...,x[n]) and outputs the sum of all the images of f under S_n
+Symm:=proc(f,x,n): local Sn, pi: Sn:=permute(n): add(SubsPi(f,x,pi), pi in Sn); end proc:
+
+#ASymm(f,x,n): inputs an ARBITRARY polynomial f(x[1],...,x[n]) and outputs the sum of all the images of f under S_n times the sign of the perm.
+ASymm:=proc(f,x,n): local Sn, pi, i, F: Sn:=combinat[permute](n): F:=0: for i from 1 to nops(Sn) do F:=F+(-1)**inv(Sn[i])*SubsPi(f,x,Sn[i]): end do; F; end proc:
+
+#Sc(x,L): Inputs a partion L (of n, say) and outputs s_L(x[1], ..., x[n])
+Sc:=proc(x,L): local L1, i, j, k, n: n:=convert(L,`+`): k:=nops(L): L1:=[op(L),0$(n-k)]: L1:=[seq(L1[i]+n-i,i=1..n)]:
+normal(ASymm(mul(x[i]^L1[i],i=1..n),x,n)/mul(mul(x[i]-x[j],j=i+1..n),i=1..n)); end proc:
+
+#ScBase(n,x): The Schur-base of the algebra of symmetric polynomials of degree n in x[1],...,x[n]
+ScBase:=proc(n,x): local P, i, j: P:=Par(n): expand([seq(Sc(x,P[i]),i=1..nops(P))]); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C23
+
+#BEGIN REFORMATTED C24
+############################################################################################################################################################
+
+#Wt(T,x): The weight of the T x[1]^NumberOfOnes*x[2]^NumberOfTwos...
+Wt:=proc(T,x): local i, j: mul(mul(x[T[i][j]],j=1..nops(T[i])),i=1..nops(T)); end proc: 
+
+#MaxRims(L): inputs a shape (aka partition) and outputs the list of max. rims
+MaxRims:=proc(L): local k, i: k:=nops(L): [seq(L[i]-L[i+1],i=1..k-1),L[k]]; end proc:
+
+#SubSeqs(B) inputs a list of non-neg. integers b and outputs the set of all [c1, ..., ck] such that c1<=b1, ..., ck<=bk
+SubSeqs:=proc(B) option remember: local k, B1, S1, i, s1: k:=nops(B): if k=0 then RETURN({[]}); end if; B1:=[op(1..k-1,B)]:
+S1:=SubSeqs(B1): {seq(seq([op(s1),i],s1 in S1),i=0..B[k])}; end proc:
+
+#KickZero(L): removes 0 from the end
+KickZero:=proc(L): local i: for i from 1 to nops(L) while L[i]<>0 do end do; [op(1..i-1,L)]; end proc:
+
+#Sc1a(x,L,a): The weight-enumerator of SSYT of shape L with largest entry a
+Sc1a:=proc(x,L,a): local k, i, MR, R, r, S, L1, a1, f: k:=nops(L): if k=1 then if L[1]=1 then RETURN(x[a]); else
+RETURN(expand(add(Sc1a(x,[L[1]-1],a1),a1=1..a)*x[a])); end if; end if; MR:=MaxRims(L): R:=SubSeqs(MR) minus {[0$k]}: S:={}: f:=0:
+for r in R do L1:=[seq(L[i]-r[i],i=1..k)]: L1:=KickZero(L1): f:=expand(f+(add(Sc1a(x,L1,a1),a1=nops(L1)..a-1))*x[a]^convert(r,`+`)): end do; f; end proc:
+
+Sc1:=proc(x,L): local n, a: n:=convert(L,`+`): add(Sc1a(x,L,a),a=nops(L)..n); end proc:
+
+Conj:=proc(L) option remember: local k, C1, i1, L1, i: if L=[] then RETURN([]); end if; k:=nops(L): L1:=[seq(L[i]-1,i=1..k)]:
+for i1 from 1 to nops(L1) while L1[i1]>0 do end do; i1:=i1-1: L1:=[op(1..i1,L1)]: C1:=Conj(L1): [k,op(C1)]; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C24
+
+#BEGIN REFORMATTED C25
+############################################################################################################################################################
+
+pTOScMat:=proc(n): evalm(pTOmMat(n)&*ScTOmMat(n)&^(-1)); end proc:
+
+ScTOmMat:=proc(n): local SB, x, i: SB:=ScBase(n,x): matrix([seq(mVec(SB[i],x,n),i=1..nops(SB))]); end proc:
+
+#Eni(n,i): The adjacent trans. i->i+1 i+1->i
+Eni:=proc(n,i): local j: [seq(j,j=1..i-1),i+1,i,seq(j,j=i+2..n)]; end proc:
+
+#Mul(pi,sig): The permutation pi times the permutation sig
+Mul:=proc(pi,sig): local i: [seq(sig[pi[i]],i=1..nops(pi))]; end proc:
+
+#Sn(n): The list of length(?) such that L[i] is the set of permutations of length i-1
+Sn:=proc(n): local L, A, N, j, pi: A:={[seq(j,j=1..n)]}: L:=[A]: N:={seq(seq(Mul(Eni(n,j),pi), pi in L[-1]),j=1..n-1)} minus A: while N<>{} do
+L:=[op(L),N]: A:=A union N: N:={seq(seq(Mul(Eni(n,j),pi), pi in L[-1]),j=1..n-1)} minus A: end do; L; end proc:
+
+#inv(pi): the number of inversions of the permutation pi
+inv:=proc(pi): local i, j, n, co: n:=nops(pi): co:=0: for i from 1 to n-1 do for j from i+1 to n do if pi[i]>pi[j] then co:=co+1;
+end if; end do; end do; co; end proc:
+
+#AllFacts(pi): inputs a permutation pi and outputs the set of all ways of writing as a product of generators [3,1,2,4] Eni(n,3)*...
+AllFacts:=proc(pi) option remember: local n, S, j, pi1, S1, s1, i: n:=nops(pi): if pi=[seq(j,j=1..n)] then RETURN({[]}); end if; S:={}:
+for i from 1 to n-1 do pi1:=Mul(pi,Eni(n,i)): if inv(pi1)<inv(pi) then S1:=AllFacts(pi1); S:=S union {seq([i,op(s1)],s1 in S1)}; end if; end do; S; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C25
+
+#1. Write a procedure VerifyReinerTh1(n), that verify empirically Theorem 1 in this cute note.
+#   Make sure that VerifyReinerTh1(n) is true for n between 3 and 6 (and if your computer would allow, n=7)
+#   [Hint: First write a procedure NuYB(w), that inputs a word in the alphabet {1, ..., n-1} and outputs the number triples of the form [j,j+1,j] or [j+1,j,j+1] for some j between 1 and n-2.
+
+NuYB:=proc(w): local co, i, n:
+co:=0: n:=nops(w):
+for i from 1 to n-2 do
+if w[i]=w[i+2] and abs(w[i]-w[i+1])=1 then co:=co+1; end if;
+end do;
+co;
+end proc:
+
+VerifyReinerTh1:=proc(n): local w0, RF, w, i:
+w0:=[seq(n+1-i, i=1..n)]:
+RF:=AllFacts(w0):
+evalb(add(NuYB(w),w in RF)=nops(RF));
+end proc:
+
+#seq(VerifyReinerTh1(n), n=3..6);
+#All true as desired
+
+#2. Write a procedure VerifyReinerConj3(n), Verify checks empirically Conj. 3 in this elegant note.
+#   Make sure that VerifyConj3(n) is true for n between 3 and 6 (and if your computer would allow, n=7)
+#   [Hint: The second moment of a random variable X, denoted by m2(X), is the average of the square of X. The variance is m2-average2
+#   [Optional challenge ($200): Prove Conj. 3 for all n]
+
+VerifyReinerConj3:=proc(n): local w0, RF, w, i, l, N, sumX, sumX2:
+w0:=[seq(n+1-i,i=1..n)]:
+RF:=AllFacts(w0):
+N:=nops(RF): l:=n*(n-1)/2:
+sumX:=add(NuYB(w),w in RF):
+sumX2:=add(NuYB(w)^2,w in RF):
+evalb(sumX2/N-(sumX/N)^2=(l-4)/(l-2));
+end proc:
+
+#seq(VerifyReinerConj3(n), n=4..6);
+#All true as desired
+
+#3. Write a procedure GenGp(n,G) that inputs a positive integer n, and a set of permutations of length n, G, and outputs the subset of the symmetric group S_n generated by the members of G.
+#   (i) check that nops(GenGp(n,{seq(Eni(n,i),i=1..n-1)})) equals n! for n from 2 to 7 (as it should)
+#   (ii) Run this line many times pi:=randperm(7): sig:=randperm(7): nops(GenGp(7,{pi,sig}));
+#   and see how often it equals 7!=5040 (i.e. how likely are two random permutations to generate the whole group)
+
+GenGp:=proc(n,G): local A, N, pi, sig, j:
+A:=G: N:={seq(seq(Mul(pi,sig),sig in A),pi in A)} minus A:
+while N<>{} do
+A:=A union N:
+N:={seq(seq(Mul(pi,sig),sig in A),pi in A)} minus A:
+end do;
+A;
+end proc:
+
+#seq(nops(GenGp(n,{seq(Eni(n,i),i=1..n-1)})),n=2..7);
+#Output: 2, 6, 24, 120, 720, 5040
+
+Experiment:=proc(trials): local i, co, pi, sig:
+co:=0:
+for i from 1 to trials do
+pi:=randperm(7): sig:=randperm(7):
+if nops(GenGp(7,{pi,sig}))=5040 then co:=co+1; end if;
+end do;
+co;
+end proc:
+
+#Experiment(20);
+#Output: 11
+
+#4. Describe briefly your progress on your final project.
+#No progress since last week, all progress can be found on austindecicco.com/gradp.html

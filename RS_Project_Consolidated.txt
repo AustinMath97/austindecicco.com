@@ -1,0 +1,1280 @@
+restart:
+with(combinat):
+with(plots):
+
+######################################################################
+# Robinson-Schensted Project - Consolidated Maple Code
+#
+# Sources: RSDataGen.txt, PropertyVerifier.txt, IDSubseqCor.txt,
+#          AvgShape.txt, RSStatFinder.txt, RS_Project_Code.txt
+#
+# Dataset reads - uncomment as needed depending on which procedures
+# are being run:
+#
+#   read "RSDataset.m":
+#   read "BRCNDataset.m":
+#   read "AvgShape.m":
+#   read "InDeQDataset.m":
+#
+# Contents:
+#   1.  Core RS class procedures
+#   2.  Longest subsequence procedures
+#   3.  Alternative RS implementation (RS_Project_Code)
+#   4.  Dataset generation
+#   5.  Property verification
+#   6.  Subsequence covariance
+#   7.  Average shape
+#   8.  Row/column sum statistics
+#   9.  Logan-Shepp limit-shape tests
+#   10. First-row/first-column Monte Carlo
+#   11. Asymptotic independence tests for distinguished entries
+######################################################################
+
+Digits:=20:
+
+######################################################################
+# 1. Core RS class procedures
+# (shared across RSDataGen.txt and RSStatFinder.txt)
+######################################################################
+
+#Park(n,k): The set of partitions of n into exactly k parts
+Park:=proc(n,k) local S,k1,S1,s1:
+option remember:
+
+if n<k then
+   RETURN({}):
+fi:
+
+if k=0 then
+ if n=0 then
+   RETURN({[]}):
+   else
+    RETURN({}):
+fi:
+fi:
+
+S:={}:
+for k1 from 0 to k do
+ S1:=Park(n-k,k1):
+ S:= S union {seq([op(s1+[1$k1]),1$(k-k1)], s1 in S1)}:
+od:
+S:
+end:
+
+#Par(n): The set of partitions of n, the clever way.
+Par:=proc(n) local k:
+{seq(op(Park(n,k)), k=1..n)}:
+end:
+
+#SYT(L): The SET of Standard Young tableaux of shape L
+SYT:=proc(L) option remember: local i, k, n, S, L1, S1, s1: k:=nops(L): n:=add(L[i],i=1..k): if k=0 then RETURN({[]}); end if; S:={}:
+for i from 1 to k-1 do if L[i]>L[i+1] then L1:=[op(1..i-1,L),L[i]-1,op(i+1..k,L)]; S1:=SYT(L1);
+S:=S union {seq([op(1..i-1,s1),[op(s1[i]),n],op(i+1..k,s1)],s1  in S1)}; end if; end do;
+if L[k]>1 then L1:=[op(1..k-1,L),L[k]-1]; S1:=SYT(L1); S:=S union {seq([op(1..k-1,s1),[op(s1[k]),n]],s1  in S1)};
+else L1:=[op(1..k-1,L)]; S1:=SYT(L1); S:=S union {seq([op(1..k-1,s1), [n]],s1  in S1)}; end if; S; end proc:
+
+#PSYT(Y): prints the SYT Y
+PSYT:=proc(Y): local i: for i from 1 to nops(Y) do lprint(op(Y[i])): end do; end proc:
+
+#RS11(a,i): inputs an INCREASING list of positive integers, a, and another positive integer i outputs a pair a1,j, where (usually a1 is of the same length as a)
+#and i is put where it belongs and j is the entry that it bumped, unless i is larger than all the members of a (i.e. larger than a[-1]) then a1 is [op(a),i], and j is 0
+RS11:=proc(a,i): local k, j: k:=nops(a): for j from 1 to k while a[j]<i do end do; if j=k+1 then RETURN([op(a),i],0); end if; [op(1..j-1,a),i,op(j+1..k,a)],a[j]; end proc:
+
+NuSYTpairs:=proc(n) option remember: local S, P, p: P:=Par(n): S:=0: for p in P do S:=S+NuSYT(p)^2: end do; S; end proc:
+
+SYTpairs:=proc(n) option remember: local S, P, p, S1, s1, s2: P:=Par(n): S:={}: for p in P do S1:=SYT(p):
+S:= S union {seq(seq([s1,s2], s1 in S1), s2 in S1)}: end do; S; end proc:
+
+#NuSYT(L): The NUMBER of Standard Young tableaux of shape L
+NuSYT:=proc(L) option remember: local i, k, S, L1: k:=nops(L): if k=0 then RETURN(1); end if; S:=0: for i from 1 to k-1 do if L[i]>L[i+1] then
+L1:=[op(1..i-1,L),L[i]-1,op(i+1..k,L)]; S:=S+NuSYT(L1); end if; end do; if L[k]>1 then L1:=[op(1..k-1,L),L[k]-1]; S:=S+ NuSYT(L1); else
+L1:=[op(1..k-1,L)]; S:=S+NuSYT(L1); end if; S; end proc:
+
+#RS1(Y,i): inputs a partial Young tableau and another integer i NOT yet in Y places it in the right place,
+#by a bumping process it returns a tableau with one more box followed by the name of the row where it settled
+RS1:=proc(Y,i): local k, NewY, lucy, bumpee, i1, j: if Y=[] then RETURN([[i]],1); end if; k:=nops(Y):
+lucy:=RS11(Y[1],i): NewY[1]:=lucy[1]: bumpee:=lucy[2]: if bumpee=0 then RETURN([NewY[1],op(2..k,Y)],1);
+end if; for i1 from 2 to k  while bumpee<>0 do lucy:=RS11(Y[i1],bumpee): NewY[i1]:=lucy[1]: bumpee:=lucy[2]:
+if bumpee=0 then RETURN([seq(NewY[j],j=1..i1),op(i1+1..k,Y)],i1); end if; end do; [seq(NewY[j],j=1..k),[bumpee]],k+1; end proc:
+
+#RS(pi): inputs a permutation pi of ({1, ..., n:=nops(pi)) and outputs a pair of SYT of the SAME shape (with n boxes) The Robinson-Schenstead algorithm
+RS:=proc(pi): local Yl, i, Yr, eaea, p: if pi=[] then RETURN([[],[]]); end if; Yl:=[[pi[1]]]: Yr:=[[1]]: for i from 2 to nops(pi) do eaea:=RS1(Yl,pi[i]):
+Yl:=eaea[1]: p:=eaea[2]: if p<=nops(Yr) then Yr:=[op(1..p-1,Yr),[op(Yr[p]),i],op(p+1..nops(Yr),Yr)]; else Yr:=[op(Yr),[i]]; end if; end do; [Yl, Yr]; end proc:
+
+#RSeft(pi): inputs a permutation pi (of size nops(pi)) and outputs of whatever shape (with n boxes)
+RSleft:=proc(pi): local Y, i: Y:=[]: for i from 1 to nops(pi) do Y:=RS1(Y,pi[i])[1]: end do; Y; end proc:
+
+#Cells(L): the set of n (=sum(L)) cells [i,j] in the shape L
+Cells:=proc(L): local k, i, j: k:=nops(L): {seq(seq([i,j],j=1..L[i]),i=1..k)}; end proc:
+
+Conj:=proc(L) option remember: local k, C1, i1, L1, i: if L=[] then RETURN([]); end if; k:=nops(L): L1:=[seq(L[i]-1,i=1..k)]:
+for i1 from 1 to nops(L1) while L1[i1]>0 do end do; i1:=i1-1: L1:=[op(1..i1,L1)]: C1:=Conj(L1): [k,op(C1)]; end proc:
+
+#Hook(L,c): The set of the cells in the hook corresponding to the cell c=[i,j] (i.e. the set of cells to the right and to the bottom of c)
+Hook:=proc(L,c): local k, i, j, C, i1, j1, i2: k:=nops(L): i:=c[1]: j:=c[2]: if not (i>=1 and i<=k) then RETURN(FAIL); end if;
+if not(j>=1 and j<=L[i]) then RETURN(FAIL); end if; C:={seq([i,j1],j1=j..L[i])}: for i2 from i to k while j<=L[i2] do end do;
+i2:=i2-1: C:=C union {seq([i1,j],i1=i..i2)}: end proc:
+
+#HL(L,c): the hook-length of cell c in the shape L
+HL:=proc(L,c): nops(Hook(L,c)); end proc:
+
+HLc:=proc(L,c): local i, j, L1: L1:=Conj(L): i:=c[1]: j:=c[2]: L[i]-j+L1[j]-i+1; end proc:
+
+#NuSYTc(L): implementing the Frame-Robinson-Thrall Hook Length Formula
+NuSYTc:=proc(L): local n, C, i, c: n:=add(L[i],i=1..nops(L)): C:=Cells(L): n!/mul(HL(L,c),c in C); end proc:
+
+#NuSYTcc(L): implementing the Frame-Robinson-Thrall Hook Length Formula Cleverly
+NuSYTcc:=proc(L): local n, C, i, c: n:=add(L[i],i=1..nops(L)): C:=Cells(L): n!/mul(HLc(L,c),c in C); end proc:
+
+#PlotDist(f,x): plots the prob. distribution inspired by the weight enumerator f in the variable x after it is turned to a prob. distribution (after dividing by subs(x=1,f)
+PlotDist:=proc(f,x): local f1, i: f1:=f/subs(x=1,f): plot([seq([i,coeff(f1,x,i)],i=ldegree(f1,x)..degree(f1,x))]); end proc:
+
+#WtE(S,f,x): the weight-enumerator of the set S according to the statistic f(s) WtE(permute(5), pi->nops(RS(pi)[1]),x);
+WtE:=proc(S,f,x): local s: add(x^f(s),s in S); end proc:
+
+Moms:=proc(f,x,r): local mu, L, f1, sig, i: f1:=f/subs(x=1,f): mu:=subs(x=1,diff(f1,x)): L:=[mu]: f1:=f1/x^mu: f1:=x*diff(f1,x): f1:=x*diff(f1,x): sig:=sqrt(subs(x=1,f1)):
+L:=[mu,sig]: for i from 3 to r do f1:=x*diff(f1,x): L:=[op(L), subs(x=1,f1)]: end do; L; end proc:
+
+SMoms:=proc(f,x,r): local L, sig, i: L:=Moms(f,x,r): sig:=L[2]: [op(1..2,L),seq(L[i]/sig^i,i=3..r)]; end proc:
+
+OT:=proc(L): local n, c: n:=convert(L,`+`): c:=Cells(L)[rand(1..n)()]: while HLc(L,c)>1 do c:=Hook(L,c)[rand(1..HLc(L,c))()]: end do; c; end proc:
+
+#RandSYT(L): a random SYT of shape L
+RandSYT:=proc(L): local k, c, i, L1, n, Y1: if L=[1] then RETURN([[1]]); end if; n:=convert(L,`+`): k:=nops(L): c:=OT(L): i:=c[1]: L1:=[op(1..i-1,L),L[i]-1,op(i+1..k,L)]:
+if L1[-1]=0 then L1:=[op(1..nops(L1)-1,L1)]; end if; Y1:=RandSYT(L1): if nops(L1)=k then [op(1..i-1,Y1),[op(Y1[i]),n],op(i+1..k,Y1)]; else [op(1..k-1,Y1),[n]]; end if; end proc:
+
+#Average proc for lists
+Av:=proc(L): local n, i: n:=nops(L): evalf(add(L[i],i=1..n)/n); end proc:
+
+#Calculates the mean of populations of vectors
+VSMean:=proc(L):
+local n, S, j, i, K, M: n:=nops(L): S:=Array(1..n): K:=Array(1..30): M:=Array(1..n):
+for i from 1 to n do M[i]:=nops(L[i]): end do;
+for i from 1 to 30 do
+for j from 1 to n do
+if i > M[j] then S[j]:=0; else
+S[j]:=L[j][i]; end if;
+end do;
+K[i]:=Av(convert(S,list));
+end do;
+convert(K,list);
+end proc:
+
+#Calculates the SE of populations of vectors
+VSSE:=proc(L):
+local n, mu, j, i, K, k, M, S: n:=nops(L): mu:=VSMean(L): K:=Array(1..30): M:=Array(1..n): S:=Array(1..n):
+for i from 1 to n do M[i]:=nops(L[i]): end do;
+for i from 1 to 30 do
+for j from 1 to n do
+if i > M[j] then S[j]:=0; else
+S[j]:=L[j][i]; end if;
+end do;
+K[i]:=evalf(sqrt(add((S[k]-mu[i])^2,k=1..n))/n);
+end do;
+convert(K,list);
+end proc:
+
+#Proc to pull a random SYT P from dataset Q with n=n
+RandPn:=proc(n):
+local j:
+j:=rand(1..nops(Q[n]))():
+Q[n][j][2][1];
+end proc:
+
+#Proc to pull a random SYT Q from dataset Q with n=n
+RandQn:=proc(n):
+local j:
+j:=rand(1..nops(Q[n]))():
+Q[n][j][2][2];
+end proc:
+
+
+######################################################################
+# 2. Longest subsequence procedures
+# (shared across PropertyVerifier.txt and IDSubseqCor.txt)
+######################################################################
+
+#LSubseq(L, cmp): inputs a list L of distinct integers and a comparison procedure cmp, outputs the longest subsequence of L
+LSubseq:=proc(L, cmp): local n, tails, par, lo, hi, mid, pos, res, idx, i:
+n:=nops(L):
+tails:=Array(1..n, fill=0):
+par:=Array(1..n, fill=0):
+pos:=0:
+for i from 1 to n do
+lo:=1:
+hi:=pos:
+while lo<=hi do
+mid:=iquo(lo+hi,2):
+if cmp(L[tails[mid]],L[i]) then lo:=mid+1; else hi:=mid-1; end if;
+end do;
+if lo>1 then par[i]:=tails[lo-1]; end if;
+tails[lo]:=i:
+if lo>pos then pos:=lo; end if;
+end do;
+res:=[]:
+idx:=tails[pos]:
+while idx<>0 do
+res:=[L[idx],op(res)]:
+idx:=par[idx]:
+end do;
+res;
+end proc:
+
+#LIS(L): The Longest Increasing Subsequence of the list L
+LIS:=proc(L): LSubseq(L,`<`); end proc:
+
+#LDS(L): The Longest Decreasing Subsequence of the list L
+LDS:=proc(L): LSubseq(L,`>`); end proc:
+
+
+######################################################################
+# 3. Alternative RS implementation
+# (RS_Project_Code.txt - independent implementation)
+######################################################################
+
+# HelpRSProject()
+# Prints the main procedures in this file.
+HelpRSProject:=proc()
+print(`Main procedures:`):
+print(`RSsimple(pi), RSShape(pi), RandShape(n)`):
+print(`PlotLS(n), TestEdges(n,K)`):
+print(`FirstRowColMonte(n,K), FirstRowColMonteList(NList,K)`):
+print(`pP(m,c), pQ(m,c), JExact(n,m,c,d), RateTest(m,c,d,Ns)`):
+end:
+
+
+# ReplaceListEntry(L,pos,val):
+# Returns the list obtained from L by replacing L[pos] by val.
+ReplaceListEntry:=proc(L,pos,val)
+local r,M;
+
+M:=[]:
+
+for r from 1 to nops(L) do
+  if r=pos then
+    M:=[op(M),val]:
+  else
+    M:=[op(M),L[r]]:
+  fi:
+od:
+
+RETURN(M):
+
+end:
+
+
+# RowInsert(row,x):
+# Inserts x into an increasing row.
+# Returns [newrow, bumped, col].
+# If bumped=0, then x was appended at column col.
+RowInsert:=proc(row,x)
+local k,j,bumped,newrow;
+
+k:=nops(row):
+
+for j from 1 to k do
+  if row[j] > x then
+    bumped:=row[j]:
+    newrow:=ReplaceListEntry(row,j,x):
+    RETURN([newrow,bumped,j]):
+  fi:
+od:
+
+RETURN([[op(row),x],0,k+1]):
+
+end:
+
+
+# InsertTableau(T,x):
+# Inserts x into the insertion tableau T.
+# Returns [newT, newcell], where newcell is the cell where
+# the new box was added.
+InsertTableau:=proc(T,x)
+local Y,r,out,newrow,bumped,col,bumpee;
+
+Y:=T:
+bumpee:=x:
+r:=1:
+
+while r <= nops(Y) do
+
+  out:=RowInsert(Y[r],bumpee):
+
+  newrow:=out[1]:
+  bumped:=out[2]:
+  col:=out[3]:
+
+  Y:=ReplaceListEntry(Y,r,newrow):
+
+  if bumped=0 then
+    RETURN([Y,[r,col]]):
+  fi:
+
+  bumpee:=bumped:
+  r:=r+1:
+
+od:
+
+Y:=[op(Y),[bumpee]]:
+
+RETURN([Y,[nops(Y),1]]):
+
+end:
+
+
+# AddToQ(Qtab,newcell,t):
+# Adds the recording label t to Qtab at the new cell.
+AddToQ:=proc(Qtab,newcell,t)
+local r,Y;
+
+r:=newcell[1]:
+Y:=Qtab:
+
+if r <= nops(Y) then
+  Y:=ReplaceListEntry(Y,r,[op(Y[r]),t]):
+else
+  Y:=[op(Y),[t]]:
+fi:
+
+RETURN(Y):
+
+end:
+
+
+# RSsimple(pi):
+# Inputs a permutation pi.
+# Outputs [P,Q], the Robinson--Schensted pair.
+RSsimple:=proc(pi)
+local Ptab,Qtab,t,out,newcell;
+
+Ptab:=[]:
+Qtab:=[]:
+
+for t from 1 to nops(pi) do
+
+  out:=InsertTableau(Ptab,pi[t]):
+
+  Ptab:=out[1]:
+  newcell:=out[2]:
+
+  Qtab:=AddToQ(Qtab,newcell,t):
+
+od:
+
+RETURN([Ptab,Qtab]):
+
+end:
+
+
+# RSShape(pi):
+# Returns the shape of the insertion tableau of pi.
+RSShape:=proc(pi)
+local P,k,out;
+
+P:=[]:
+
+for k from 1 to nops(pi) do
+  out:=InsertTableau(P,pi[k]):
+  P:=out[1]:
+od:
+
+RETURN([seq(nops(P[k]),k=1..nops(P))]):
+
+end:
+
+
+# CellOf(T,a):
+# Returns the cell [i,j] containing the entry a in tableau T.
+CellOf:=proc(T,a)
+local i,j;
+
+for i from 1 to nops(T) do
+  for j from 1 to nops(T[i]) do
+    if T[i][j]=a then
+      RETURN([i,j]):
+    fi:
+  od:
+od:
+
+RETURN(FAIL):
+
+end:
+
+
+# RandShape(n):
+# Generates one Plancherel-random Young diagram of size n by applying
+# Robinson--Schensted to a uniformly random permutation in S_n.
+RandShape:=proc(n)
+local pi;
+
+pi:=randperm(n):
+RETURN(RSShape(pi)):
+
+end:
+
+
+######################################################################
+# 4. Dataset generation
+# (RSDataGen.txt)
+######################################################################
+
+#n-perm size. N-number of obs
+RSnDataset:=proc(n, N):
+local S, L, i, p, total:
+
+if N < n! + 1 then
+L:=Array(1..N);
+for i from 1 to N do
+p:=randperm(n):
+L[i]:=[p, RS(p)]:
+end do;
+return(convert(L, list));
+
+else
+S:=permute(n);
+total:=n!;
+L:=Array(1..total);
+for i to total do
+p:=S[i]:
+L[i]:=[p, RS(p)]:
+end do;
+return(convert(L, list));
+end if;
+
+end proc:
+
+#n-perm size stopping point. N-number of obs
+RSDataset:=proc(n, N):
+local L, i:
+L:=Array(1..n):
+for i from 1 to n do
+L[i]:=RSnDataset(i, N):
+end do;
+convert(L, list);
+end proc:
+
+#DO NOT RUN THE COMMENTED OUT PART AND REDEFINE Q
+
+#n:=30:
+#N:=3000:
+#Q:=RSDataset(n,N):
+#save Q, n, N, "RSDataset.m":
+#save Q, n, N, "RSDataset.mpl":
+#for i from 1 to nops(Q) do
+#assign(cat('Q', i) = Q[i]);
+#save cat('Q', i), cat("RSDataset", i, ".m"):
+#end do;
+
+#Use this format to read in
+#read "RSDataset.m":
+
+#Description of the dataset Q, Q is a list of lists of pairs of [[permutation],[P,Q]] where [P,Q] is the pair derived from RS(permutation)
+#The first index of Q, Q[i] describes the lists of these pairs for n=i, i has range 1..nops(Q)
+#The second index of Q, Q[i][j], selects the pair j=[[permutation],[P,Q]] from the list of pairs of with n=i, j has range 1..obs or 1..i!
+#The third index of Q, Q[i][j][k], has two values k=1,2, and either selects the [permutation] for k=1 or [P,Q] for k=2
+#The forth index of Q, Q[i][j][k][l], either selects the value at permutation index l if k=1 or P or Q if k=2, thus l is limited to the range 1..n for k=1, and 1,2 for k=2
+#The fifth index of Q, Q[i][j][k][l][m], selects rows of P or Q
+#The sixth index of Q, Q[i][j][k][l][m][o], selects index values of rows of P or Q
+
+#Q is saved in both .m and .mpl formats, use .m if you can as it is faster and smaller, .mpl is human readable while .m is not
+
+#We also have the datasets "RSDatasetX.m" which has variable QX=Q[X], and thus up to 5 indexs QX[j][k][l][m][o]
+
+
+######################################################################
+# 5. Property verification
+# (PropertyVerifier.txt)
+######################################################################
+
+VerifyLengthProperty2:=proc(pi, SYT): local n, m, j, k: n:=nops(SYT[1]): m:=nops(SYT): j:=nops(LIS(pi)): k:=nops(LDS(pi)): if n=j and m=k then return(true); end if; false; end proc:
+
+VerifyLengthProperty:=proc():
+{seq(seq(VerifyLengthProperty2(Q[n][j][1],Q[n][j][2][1]), j=1..nops(Q[n])), n=1..30)};
+end proc:
+
+#VerifyLengthProperty();
+#Returns {true}
+
+
+######################################################################
+# 6. Subsequence covariance
+# (IDSubseqCor.txt)
+######################################################################
+
+InDe:=proc(pi): local a, b:
+a:=nops(LIS(pi)):
+b:=nops(LDS(pi)):
+[a,b];
+end proc:
+
+InDeSet:=proc(): local n, i:
+[seq(seq(InDe(Q[n][i][1]),i = 1..min(3000,n!)),n = 1..30)];
+end proc:
+
+#InDeQ:=InDeSet(): save InDeQ, "InDeQDataset.m": save InDeQ, "InDeQDataset.mpl":
+
+SubseqCovS:=proc(): local xs, ys, n, mx, my, i:
+xs:=[seq(InDeQ[i][1], i=1..nops(InDeQ))]:
+ys:=[seq(InDeQ[i][2], i=1..nops(InDeQ))]:
+n:=nops(xs): mx:=add(xs)/n: my:=add(ys)/n:
+evalf(add((xs[i]-mx)*(ys[i]-my), i=1..n)/n);
+end proc:
+
+SubseqCov:=proc(): local xs, ys, n, mx, my, i, tails, obs, k, past:
+tails:=Array(1..30, fill=0): past:=1:
+for k from 1 to 30 do
+if k > 6 then obs:=past + 2999; else obs:=k! + past - 1; end if;
+xs:=[seq(InDeQ[i][1], i=past..obs)]:
+ys:=[seq(InDeQ[i][2], i=past..obs)]:
+n:=nops(xs): mx:=add(xs)/n: my:=add(ys)/n:
+tails[k]:=evalf(add((xs[i]-mx)*(ys[i]-my), i=1..n)/n):
+past:=obs + 1:
+end do;
+convert(tails, list);
+end proc:
+
+
+######################################################################
+# 7. Average shape
+# (AvgShape.txt)
+######################################################################
+
+SYTShape:=proc(SYT): local L, n, i:
+n:=nops(SYT): L:=Array(1..n):
+for i from 1 to n do
+L[i]:=nops(SYT[i]): end do;
+convert(L, list); end proc:
+
+#Bootstrapping proc for shape where we partition the data on values of n:
+
+BootShape:=proc():
+local n, i, Pmn, Psn:
+Pmn:=[seq(VSMean([seq(SYTShape(RandPn(n)),i=1..3000)]),n=1..30)]:
+Psn:=[seq(VSSE([seq(SYTShape(RandPn(n)),i=1..3000)]),n=1..30)]:
+[Pmn,Psn]; end proc:
+
+#AvgShape:=BootShape(): save AvgShape, "AvgShape.m": save AvgShape, "AvgShape.mpl":
+
+#Description of the dataset AvgShape
+#The first index of AvgShape, AvgShape[i] picks the type of statistical data i 1 = mean, 2 = se
+#The second index of AvgShape, AvgShape[i][j] picks the value of n, n=j j in [1..30]
+
+AvgnthLength:=proc(x):
+local L, i: L:=Array(1..30):
+for i from 1 to 30 do
+L[i]:=AvgShape[1][i][x]: end do;
+convert(L,list);
+end proc:
+
+senthLength:=proc(x):
+local L, i: L:=Array(1..30):
+for i from 1 to 30 do
+L[i]:=AvgShape[2][i][x]: end do;
+convert(L,list);
+end proc:
+
+#Do rows 2..nops(SYT) behave as a normal SYT with less entries?
+TestProposition:=proc(): local L, T, diff, comp1, comp2, A, i: 
+L:=AvgnthLength(1): T:=AvgnthLength(2): A:=Array(1..30): A[1]:=0: A[2]:=0:
+for i from 3 to 30 do
+diff:=round(L[i]):
+comp1:=L[i-diff]:
+comp2:=T[i]:
+A[i]:=comp1-comp2: end do;
+convert(A,list);
+end proc:
+
+
+######################################################################
+# 8. Row/column sum statistics
+# (RSStatFinder.txt)
+######################################################################
+
+#Proc to pull a random SYT P from dataset Q
+RandP:=proc():
+local i, j:
+i:=rand(1..n)():
+j:=rand(1..nops(Q[i]))():
+Q[i][j][2][1];
+end proc:
+
+#Proc to pull a random SYT Q from dataset Q
+RandQ:=proc():
+local i, j:
+i:=rand(1..n)():
+j:=rand(1..nops(Q[i]))():
+Q[i][j][2][2];
+end proc:
+
+#Proc to pull a random SYT pair from dataset Q
+RandPQ:=proc():
+local i, j:
+i:=rand(1..n)():
+j:=rand(1..nops(Q[i]))():
+Q[i][j][2];
+end proc:
+
+#Proc to pull a random SYT pair from dataset Q with n=n
+RandPQn:=proc(n):
+local j:
+j:=rand(1..nops(Q[n]))():
+Q[n][j][2];
+end proc:
+
+#Proc to find the sum of rows and return as a vector
+RowSum:=proc(SYT):
+local L, i, n:
+n:=nops(SYT):
+L:=Array(1..n):
+for i from 1 to n do
+L[i]:=convert(SYT[i],`+`):
+end do;
+convert(L,list);
+end proc:
+
+#Proc to find the sum of cols and return as a vector
+ColSum:=proc(SYT):
+local L, i, n, s, j, m:
+n:=nops(SYT[1]):
+m:=nops(SYT):
+L:=Array(1..n):
+for j from 1 to n do
+s:=0:
+for i from 1 to m do
+if j <= nops(SYT[i]) then
+s:=s + SYT[i][j];
+end if;
+end do;
+L[j]:=s:
+end do;
+convert(L,list);
+end proc:
+
+#Finds Index of value x in SYT [row,col]
+FindSYTdex:=proc(SYT,x):
+local i, j:
+for i from 1 to min(nops(SYT),x) do
+for j from 1 to min(nops(SYT[i]),x) do
+if SYT[i][j]=x then return([i,j]); end if;
+end do; end do; end proc:
+
+#Bootstrapping proc for row/col sums where we partition the data on values of n:
+
+BootRowColbyn:=proc():
+local n, i, PRmn, QRmn, PCmn, QCmn, PRsn, QRsn, PCsn, QCsn:
+PRmn:=[seq(VSMean([seq(RowSum(RandPn(n)),i=1..3000)]),n=1..30)]:
+PCmn:=[seq(VSMean([seq(ColSum(RandPn(n)),i=1..3000)]),n=1..30)]:
+PRsn:=[seq(VSSE([seq(RowSum(RandPn(n)),i=1..3000)]),n=1..30)]:
+PCsn:=[seq(VSSE([seq(ColSum(RandPn(n)),i=1..3000)]),n=1..30)]:
+QRmn:=[seq(VSMean([seq(RowSum(RandQn(n)),i=1..3000)]),n=1..30)]:
+QCmn:=[seq(VSMean([seq(ColSum(RandQn(n)),i=1..3000)]),n=1..30)]:
+QRsn:=[seq(VSSE([seq(RowSum(RandQn(n)),i=1..3000)]),n=1..30)]:
+QCsn:=[seq(VSSE([seq(ColSum(RandQn(n)),i=1..3000)]),n=1..30)]:
+[PRmn,QRmn,PCmn,QCmn,PRsn,QRsn,PCsn,QCsn]; end proc:
+
+#BRCN:=BootRowColbyn(): save BRCN, "BRCNDataset.m": save BRCN, "BRCNDataset.mpl":
+
+#Description of the dataset BRCN
+#The first index of BRCN, BRCN[i] picks the type of statistical data i in [1..8]
+#i = 1: Row mean of P, i = 2: Col mean of P, i = 3: Row se of P, i = 4: Col se of P
+#i = 5: Row mean of Q, i = 6: Col mean of Q, i = 7: Row se of Q, i = 8: Col se of Q
+#The second index of BRCN, BRCN[i][j] picks the value of n, n=j j in [1..30]
+
+# Single pass over all SYTs for a given n, builds both maps simultaneously
+MaxGroupBoth := proc(n)
+    local L, t, R, C, rowMap, colMap, maxRow, maxCol, bestR, bestC;
+    rowMap := table();
+    colMap := table();
+    for L in Par(n) do
+        for t in SYT(L) do
+            R := convert(RowSum(t), string);
+            C := convert(ColSum(t), string);
+            if assigned(rowMap[R]) then rowMap[R] := rowMap[R] + 1;
+            else rowMap[R] := 1; end if;
+            if assigned(colMap[C]) then colMap[C] := colMap[C] + 1;
+            else colMap[C] := 1; end if;
+        end do;
+    end do;
+    maxRow := max(op(map(x -> rowMap[x], [indices(rowMap, 'nolist')])));
+    maxCol := max(op(map(x -> colMap[x], [indices(colMap, 'nolist')])));
+    bestR  := select(x -> rowMap[x] = maxRow, [indices(rowMap, 'nolist')])[1];
+    bestC  := select(x -> colMap[x] = maxCol, [indices(colMap, 'nolist')])[1];
+    [maxRow, bestR, maxCol, bestC];
+end proc:
+
+# Print table for n = 1..nMax
+MaxGroupTable := proc(nMax)
+    local n, res;
+    for n from 1 to nMax do
+        res := MaxGroupBoth(n);
+        printf("n=%d | row_max=%d (R=%s) | col_max=%d (C=%s)\n",
+                n, res[1], res[2], res[3], res[4]);
+    end do;
+end proc:
+
+MaxGroupPair := proc(n)
+    local L, t, R, C, key, pairMap, maxCount, bestKey;
+    pairMap := table();
+    for L in Par(n) do
+        for t in SYT(L) do
+            key := convert([RowSum(t), ColSum(t)], string);
+            if assigned(pairMap[key]) then pairMap[key] := pairMap[key] + 1;
+            else pairMap[key] := 1; end if;
+        end do;
+    end do;
+    maxCount := max(op(map(x -> pairMap[x], [indices(pairMap, 'nolist')])));
+    bestKey  := select(x -> pairMap[x] = maxCount, [indices(pairMap, 'nolist')])[1];
+    [maxCount, bestKey];
+end proc:
+
+MaxGroupPairTable := proc(nMax)
+    local n, res;
+    for n from 1 to nMax do
+        res := MaxGroupPair(n);
+        printf("n=%d | pair_max=%d | key=%s\n", n, res[1], res[2]);
+    end do;
+end proc:
+
+#PropUniqueSYTRow(n): proportion of SYTs of size n uniquely identified by their row sum
+PropUniqueSYTRow := proc(n)
+    local L, t, R, rowMap, total, unique, x;
+    rowMap := table();
+    total  := 0;
+    for L in Par(n) do
+        for t in SYT(L) do
+            R := convert(RowSum(t), string);
+            if assigned(rowMap[R]) then rowMap[R] := rowMap[R] + 1;
+            else rowMap[R] := 1; end if;
+            total := total + 1;
+        end do;
+    end do;
+    unique := add(`if`(rowMap[x] = 1, 1, 0), x in [indices(rowMap, 'nolist')]);
+    evalf(unique / total);
+end proc:
+
+#PropUniqueSYTCol(n): proportion of SYTs of size n uniquely identified by their col sum
+PropUniqueSYTCol := proc(n)
+    local L, t, C, colMap, total, unique, x;
+    colMap := table();
+    total  := 0;
+    for L in Par(n) do
+        for t in SYT(L) do
+            C := convert(ColSum(t), string);
+            if assigned(colMap[C]) then colMap[C] := colMap[C] + 1;
+            else colMap[C] := 1; end if;
+            total := total + 1;
+        end do;
+    end do;
+    unique := add(`if`(colMap[x] = 1, 1, 0), x in [indices(colMap, 'nolist')]);
+    evalf(unique / total);
+end proc:
+
+#PropUniqueSYTTable(nMax): prints both proportions for n = 1..nMax
+PropUniqueSYTTable := proc(nMax):
+    local n:
+    printf("n  | PropUniqueRow | PropUniqueCol\n");
+    printf("---|--------------|---------------\n");
+    for n from 1 to nMax do
+        printf("%-3d| %-14.6f| %.6f\n", n, PropUniqueSYTRow(n), PropUniqueSYTCol(n));
+    end do;
+end proc:
+
+PropUniqueSYTPair := proc(n):
+    local L, t, key, pairMap, total, unique, x:
+    pairMap := table();
+    total   := 0;
+    for L in Par(n) do
+        for t in SYT(L) do
+            key := convert([RowSum(t), ColSum(t)], string);
+            if assigned(pairMap[key]) then pairMap[key] := pairMap[key] + 1;
+            else pairMap[key] := 1; end if;
+            total := total + 1;
+        end do;
+    end do;
+    unique := add(`if`(pairMap[x] = 1, 1, 0), x in [indices(pairMap, 'nolist')]);
+    evalf(unique / total);
+end proc:
+
+PropUniqueSYTPairTable := proc(nMax)
+    local n;
+    printf("n  | PropUniquePair\n");
+    printf("---|---------------\n");
+    for n from 1 to nMax do
+        printf("%-3d| %.6f\n", n, PropUniqueSYTPair(n));
+    end do;
+end proc:
+
+
+######################################################################
+# 9. Logan-Shepp limit-shape tests
+# (RS_Project_Code.txt)
+######################################################################
+
+# Parametric form of the Logan--Shepp curve.
+LSx:=theta -> evalf(2/Pi*(sin(theta)-theta*cos(theta))):
+LSy:=theta -> evalf(2/Pi*(sin(theta)+(Pi-theta)*cos(theta))):
+
+
+# LSf(x):
+# The Logan--Shepp limit shape y=f_0(x), written as a function of x.
+LSf:=proc(x)
+local th,t;
+
+if x<0 then
+  RETURN(FAIL):
+fi:
+
+if x>=2 then
+  RETURN(0):
+fi:
+
+th:=fsolve(LSx(t)=x,t=0..Pi):
+
+RETURN(LSy(th)):
+
+end:
+
+
+# ScaledShapePoints(L):
+# Returns the scaled boundary points of the Young diagram with shape L.
+ScaledShapePoints:=proc(L)
+local n,s,i,pts,k;
+
+n:=add(L[i],i=1..nops(L)):
+s:=sqrt(n):
+k:=nops(L):
+
+pts:=[[0,L[1]/s]]:
+
+for i from 1 to k do
+  pts:=[op(pts),[i/s,L[i]/s]]:
+
+  if i<k then
+    pts:=[op(pts),[i/s,L[i+1]/s]]:
+  else
+    pts:=[op(pts),[i/s,0]]:
+  fi:
+od:
+
+RETURN(pts):
+
+end:
+
+
+# PlotLS(n):
+# Plots one random scaled Young diagram of size n together with
+# the Logan--Shepp limit curve.
+PlotLS:=proc(n)
+local L,pts,P1,P2,t;
+
+L:=RandShape(n):
+pts:=ScaledShapePoints(L):
+
+P1:=pointplot(
+      pts,
+      connect=true,
+      symbol=solidcircle,
+      title=cat("Random Young diagram, n=",n)
+    ):
+
+P2:=plot(
+      [LSx(t),LSy(t),t=0..Pi],
+      thickness=3
+    ):
+
+display([P1,P2]):
+
+end:
+
+
+# TestEdges(n,K):
+# Tests convergence of the first row and first column to 2 after
+# normalization by sqrt(n).
+# Output:
+# [n, K, average(lambda_1/sqrt(n)), average(lambda_1'/sqrt(n))]
+TestEdges:=proc(n,K)
+local r,L,A,B;
+
+A:=0:
+B:=0:
+
+for r from 1 to K do
+  L:=RandShape(n):
+  A:=A+L[1]/sqrt(n):
+  B:=B+nops(L)/sqrt(n):
+od:
+
+RETURN([n,K,evalf(A/K),evalf(B/K)]):
+
+end:
+
+
+######################################################################
+# 10. First-row/first-column Monte Carlo
+# (RS_Project_Code.txt)
+######################################################################
+
+# FirstRowColMonte(n,K):
+# Generates K random permutations in S_n.
+# For each one, computes the RS shape lambda.
+# Then records:
+#   R = lambda_1 = first row length
+#   C = number of rows = first column length
+#
+# Output:
+# [n, K, E(R), E(C), Var(R), Var(C), Cov(R,C), Corr(R,C)]
+FirstRowColMonte:=proc(n,K)
+local k,pi,L,R,C;
+local SR,SC,SR2,SC2,SRC;
+local ER,EC,VarR,VarC,Cov,Corr;
+
+if n<1 then
+  error "n must be positive":
+fi:
+
+if K<1 then
+  error "K must be positive":
+fi:
+
+SR:=0:
+SC:=0:
+SR2:=0:
+SC2:=0:
+SRC:=0:
+
+for k from 1 to K do
+
+  pi:=randperm(n):
+  L:=RSShape(pi):
+
+  R:=L[1]:
+  C:=nops(L):
+
+  SR:=SR+R:
+  SC:=SC+C:
+  SR2:=SR2+R^2:
+  SC2:=SC2+C^2:
+  SRC:=SRC+R*C:
+
+od:
+
+ER:=SR/K:
+EC:=SC/K:
+
+VarR:=SR2/K-ER^2:
+VarC:=SC2/K-EC^2:
+Cov:=SRC/K-ER*EC:
+
+if VarR=0 or VarC=0 then
+  Corr:=FAIL:
+else
+  Corr:=Cov/sqrt(VarR*VarC):
+fi:
+
+RETURN([
+  n,
+  K,
+  evalf(ER),
+  evalf(EC),
+  evalf(VarR),
+  evalf(VarC),
+  evalf(Cov),
+  evalf(Corr)
+]):
+
+end:
+
+
+# FirstRowColMonteList(NList,K):
+# Runs FirstRowColMonte(n,K) for every n in NList.
+FirstRowColMonteList:=proc(NList,K)
+local idx,Ans;
+
+Ans:=[]:
+
+for idx from 1 to nops(NList) do
+  Ans:=[op(Ans), FirstRowColMonte(NList[idx],K)]:
+od:
+
+RETURN(Ans):
+
+end:
+
+
+######################################################################
+# 11. Asymptotic independence tests for distinguished entries
+# (RS_Project_Code.txt)
+######################################################################
+
+# PatternsP(m,c):
+# All sigma in S_m such that value m is in cell c of P(sigma).
+PatternsP:=proc(m,c)
+local S,sigma,R,L;
+
+S:=permute(m):
+L:=[]:
+
+for sigma in S do
+  R:=RSsimple(sigma):
+
+  if CellOf(R[1],m)=c then
+    L:=[op(L),sigma]:
+  fi:
+od:
+
+RETURN(L):
+
+end:
+
+
+# PatternsQ(m,c):
+# All tau in S_m such that label m is in cell c of Q(tau).
+PatternsQ:=proc(m,c)
+local S,tau,R,L;
+
+S:=permute(m):
+L:=[]:
+
+for tau in S do
+  R:=RSsimple(tau):
+
+  if CellOf(R[2],m)=c then
+    L:=[op(L),tau]:
+  fi:
+od:
+
+RETURN(L):
+
+end:
+
+
+# pP(m,c):
+# Exact probability that value m is in cell c in P.
+pP:=proc(m,c)
+RETURN(nops(PatternsP(m,c))/factorial(m)):
+end:
+
+
+# pQ(m,c):
+# Exact probability that label m is in cell c in Q.
+pQ:=proc(m,c)
+RETURN(nops(PatternsQ(m,c))/factorial(m)):
+end:
+
+
+# Std(W):
+# Standardizes a list W of distinct numbers.
+# Example: Std([7,2,5]) = [3,1,2].
+Std:=proc(W)
+local i,j,r,R;
+
+R:=[]:
+
+for i from 1 to nops(W) do
+  r:=1:
+
+  for j from 1 to nops(W) do
+    if W[j] < W[i] then
+      r:=r+1:
+    fi:
+  od:
+
+  R:=[op(R),r]:
+od:
+
+RETURN(R):
+
+end:
+
+
+# CompatK(sigma,tau,k):
+#
+# sigma is the relative order of the small values 1,...,m
+# in their positions.
+#
+# tau is the relative order of the first m entries.
+#
+# k is the size of the overlap:
+# {first m positions} intersection {values 1,...,m}.
+#
+# Returns 1 if sigma and tau are compatible with overlap size k,
+# and 0 otherwise.
+CompatK:=proc(sigma,tau,k)
+local m,U,t,Avals,Bsub;
+
+m:=nops(sigma):
+
+if k=0 then
+  RETURN(1):
+fi:
+
+U:=[]:
+
+# In tau, the positions occupied by small values are exactly
+# the positions whose ranks are 1,2,...,k.
+for t from 1 to m do
+  if tau[t] <= k then
+    U:=[op(U),t]:
+  fi:
+od:
+
+if nops(U)<>k then
+  RETURN(0):
+fi:
+
+# The first k entries of sigma are the small values appearing
+# in the first m positions, listed in increasing order of position.
+Avals:=[seq(sigma[t],t=1..k)]:
+
+# tau restricted to the overlap positions.
+Bsub:=[seq(tau[U[t]],t=1..k)]:
+
+if Std(Avals)=Bsub then
+  RETURN(1):
+else
+  RETURN(0):
+fi:
+
+end:
+
+
+# PatternJointCount(n,m,sigma,tau):
+# Counts permutations pi in S_n such that
+# A_{n,m}(pi)=sigma and B_{n,m}(pi)=tau.
+PatternJointCount:=proc(n,m,sigma,tau)
+local k,lo,S,term;
+
+if n<m then
+  RETURN(0):
+fi:
+
+S:=0:
+
+# Need n-2m+k >= 0.
+lo:=max(0,2*m-n):
+
+for k from lo to m do
+  if CompatK(sigma,tau,k)=1 then
+    term:=binomial(n-m,m-k)^2*factorial(n-2*m+k):
+    S:=S+term:
+  fi:
+od:
+
+RETURN(S):
+
+end:
+
+
+# PatternJointProb(n,m,sigma,tau):
+# Exact probability of the pair of patterns (sigma,tau).
+PatternJointProb:=proc(n,m,sigma,tau)
+
+RETURN(simplify(PatternJointCount(n,m,sigma,tau)/factorial(n))):
+
+end:
+
+
+# JExact(n,m,c,d):
+# Exact value of
+# P( X^P_{n,m}=c and X^Q_{n,m}=d ).
+JExact:=proc(n,m,c,d)
+local Ac,Bd,sigma,tau,S;
+
+if n<m then
+  RETURN(FAIL):
+fi:
+
+Ac:=PatternsP(m,c):
+Bd:=PatternsQ(m,d):
+
+S:=0:
+
+for sigma in Ac do
+  for tau in Bd do
+    S:=S+PatternJointProb(n,m,sigma,tau):
+  od:
+od:
+
+RETURN(simplify(S)):
+
+end:
+
+
+# RateTest(m,c,d,Ns):
+#
+# Ns is a list of n-values, e.g. [5,10,20,50,100].
+#
+# Output rows:
+# [n, JExact, product_of_marginals, difference, n^2*difference, decimal]
+RateTest:=proc(m,c,d,Ns)
+local pc,pd,prod,n,J,diff,scaled,L;
+
+pc:=pP(m,c):
+pd:=pQ(m,d):
+prod:=simplify(pc*pd):
+
+L:=[]:
+
+for n in Ns do
+
+  if n<m then
+    ERROR("Each n must be at least m"):
+  fi:
+
+  J:=JExact(n,m,c,d):
+  diff:=simplify(J-prod):
+  scaled:=simplify(n^2*diff):
+
+  L:=[op(L),[n,J,prod,diff,scaled,evalf(scaled)]]:
+
+od:
+
+RETURN(L):
+
+end:
+
+
+######################################################################
+# Sample commands
+# Uncomment the commands below to reproduce the tests used in the report.
+######################################################################
+
+# HelpRSProject();
+
+# Logan--Shepp plots:
+# PlotLS(100);
+# PlotLS(500);
+# PlotLS(2000);
+
+# Edge convergence tests:
+# TestEdges(100,50);
+# TestEdges(400,50);
+# TestEdges(1600,50);
+
+# First row / first column covariance and correlation:
+# FirstRowColMonte(100,1000);
+# FirstRowColMonte(500,1000);
+# FirstRowColMonte(1000,1000);
+# FirstRowColMonteList([100,500,1000],1000);
+
+# Asymptotic independence rate tests:
+# RateTest(2,[1,2],[1,2],[2,3,4,5,10,20,50,100]);
+# RateTest(3,[1,2],[1,2],[3,4,5,10,20,50]);
+
+# Property verification:
+# VerifyLengthProperty();
+
+# Subsequence covariance:
+# SubseqCov();
+# SubseqCovS();
+
+# Average shape / row-removal heuristic:
+# AvgnthLength(1);
+# senthLength(1);
+# TestProposition();
+
+# Row/column sum statistics:
+# MaxGroupTable(13);
+# MaxGroupPairTable(13);
+# PropUniqueSYTTable(11);
+# PropUniqueSYTPairTable(11);
