@@ -1,0 +1,26 @@
+#Taken and modified from Daniel Skoog at https://github.com/dskoog/Maple-OEIS/blob/master/src/OEIS.mpl by Austin DeCicco on 3/2/2026 for Dr. Doron Zeilberger's Experimental Mathematics Spring 2026
+
+#Search(1,1,2,3,5,8) = 45, which corresponds to the first result's A-number on OEIS
+
+URLpath := "https://oeis.org/":
+
+Search := proc()
+option cache;
+local argsin, i, j, oeis_json, parsed_value, searchstring, cmd;
+parsed_value := Array(1..0):
+if type( [ args ], 'list'('integer') ) = true and nargs < 6 or ( type( [ args ], 'list'('integer') ) = false and not type( args, 'string') ) then
+error "6 or more integers required";
+elif type( [ args ], 'list'('integer') ) = true then
+argsin := :-map( :-convert, [ args ], ':-string' );
+searchstring := cat( argsin[1], seq( op( [",", argsin[i]] ), i = 2..numelems( argsin ) ) );
+elif type( args, 'string') then
+argsin := [args];
+searchstring := StringTools:-SubstituteAll(op(argsin), " ", "%20");
+else
+error "in arguments, expected integer sequence or string; received", op( [ args ] );        
+end if;
+cmd := cat("curl -s ", URLpath, "search?fmt=json&q=", searchstring):
+oeis_json := ssystem(cmd)[2]:
+parsed_value(1) := eval( JSON:-ParseString( oeis_json ) );
+if type(parsed_value[1][1]["number"],integer) then return parsed_value[1][1]["number"]; else return -1; end if;
+end proc:

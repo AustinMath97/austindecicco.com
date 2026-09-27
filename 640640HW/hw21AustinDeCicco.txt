@@ -1,0 +1,121 @@
+#OK to post homework
+#Austin DeCicco, 4/12/26, Assignment 21
+
+#BEGIN REFORMATTED C21
+############################################################################################################################################################
+
+with(combinat):
+
+#SubsPi(f,x,pi): inputs a polynomial f(x[1], ..., x[n]) (n:=nops(pi)) and ouputs the new polynomial obtained by substituting x[i]->x[pi[i]]
+SubsPi:=proc(f,x,pi): local n, i: n:=nops(pi): subs({seq(x[i]=x[pi[i]],i=1..n)},f); end proc:
+
+#IsSymS(f,x,n): checks that all the images of f under the symmetric group coincide with f (that is a symmetric polynomial)
+IsSymS:=proc(f,x,n): local Sn, pi: Sn:=permute(n): evalb({seq(SubsPi(f,x,pi), pi in Sn)}={f}); end proc:
+
+#IsSym(f,x,n): checks that f(x[1], ..., x[n]) is symmetric the Pablo way
+IsSym:=proc(f,x,n): local i: evalb({seq(subs({x[i]=x[i+1],x[i+1]=x[i]},f),i=1..n-1)}={f}); end proc:
+
+#Symm(f,x,n): inputs an ARBITRARY polynomial f(x[1],...,x[n]) and outputs the sum of all the images of f under S_n
+Symm:=proc(f,x,n): local Sn, pi: Sn:=permute(n): add(SubsPi(f,x,pi), pi in Sn); end proc:
+
+#rSymm(f,x,n): inputs an ARBITRARY polynomial f(x[1],...,x[n]) and outputs the sum of all the distinct images
+rSymm:=proc(f,x,n): local Sn, pi: Sn:=permute(n): convert({seq(SubsPi(f,x,pi), pi in Sn)}, `+`); end proc:
+
+#Park(n,k): The set of partitions of n into exactly k parts
+Park:=proc(n,k) option remember: local S, k1, S1, s1: if n<k then RETURN({}); end if; if k=0 then if n=0 then RETURN({[]}); else RETURN({}); end if; end if;
+S:={}: for k1 from 0 to k do S1:=Park(n-k,k1): S:= S union {seq([op(s1+[1$k1]),1$(k-k1)], s1 in S1)}: end do; S; end proc:
+
+#Par(n): The set of partitions of n, the clever way.
+Par:=proc(n): local k: {seq(op(Park(n,k)), k=1..n)}; end proc:
+
+#mL(x,n,L): inputs a variable name x a positive integer n and an integer partition L outputs the symmetrizer of x[1]^L[1]*...*x[nops(L)]^L[nops(L)], m_L(x[1], ..., x[n]) MONOMIAL symmetric polymomial
+mL:=proc(x,n,L): local k, i: k:=nops(L): rSymm(mul(x[i]^L[i],i=1..k),x,n); end proc:
+
+#ekn(k,n,x): The elementary symmetric polynomial of degree k in x[1], ..., x[n]
+ekn:=proc(k,n,x): rSymm(mL(x,n,[1$k]),x,n); end proc:
+
+#pkn(k,n,x): The power symmetric polynomial
+pkn:=proc(k,n,x): rSymm(mL(x,n,[k]),x,n); end proc:
+
+#eknC(k,n,x): A cleverer way to output e_k(x[1], ..., x[n])
+eknC:=proc(k,n,x) option remember: if k>n then RETURN(0); end if; if n=0 then if k=0 then RETURN(1); else RETURN(0); end if; end if; expand(eknC(k,n-1,x)+ x[n]*eknC(k-1,n-1,x)); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C21
+
+#2. Report on the progress of your project (including that you did nothing so far)
+
+#Me and Jike met before and after class on Thursday to discuss gameplans and when we wanted to begin work, we also exchanged contact information. Jike informed me he wanted to get in touch with you for further details
+#on what exactly you're looking for. I intend to talk to him before class on Monday about how that conversation went.
+
+#3. Convince yourself that (1+x[1]*t)*(1+x[2]*t)*...*(1+x[n]*t)= 1+ ekn(1,n,x)*t+ ekn(2,n,x)*t^2+ ekn(3,n,x)*t^3+...
+#   By using Maple's commands "mul", "expand", and "coeff" write a procedure eknVC(k,n,x) that computes ekn(k,n,x) in a very clever way
+
+eknVC:=proc(k,n,x): local i, t:
+if k=0 then return 1; end if;
+coeff(expand(mul(1 + x[i]*t, i=1..n)),t^k);
+end proc:
+
+#seq(seq(evalb(eknVC(i,j,x)=ekn(i,j,x)), i=1..j), j=1..6);
+#All true thus I'm convinced
+
+#4. Another important sequence of symmetric polynomials are the complete-homog. symmetric polynomials h_k(x_1, ..., x_n)
+#   One way of defining them is via the generating function (in the variable) Sum_{k=0}^{infty} h_k(x_1, ..., x_n)*t^k=1/((1-t*x[1])*(1-t*x[2])*...*(1-t*x[n]))
+#   Using the Maple commands "mul", "taylor", and "expand", write a procedure hkn(k,n,x) to compute these important functions.
+
+hkn:=proc(k,n,x): local series, i:
+series:=taylor(1/mul(1 - t*x[i], i=1..n), t=0, k+1):
+series:=expand(series);
+coeff(series, t^k);
+end proc:
+
+#hkn(2,2,x);
+#Working as expected.
+
+#5. After reading about Newton's identities, write a procedure CheckNewton(k,n) that checks the identity for specific k and n. Then run CheckNewton(k,n) for all 5>=n>=k>=1
+
+Pow:=proc(k,n,x): local i:
+add(x[i]^k, i=1..n);
+end proc:
+
+CheckNewton:=proc(k,n): local s, i, p, y:
+s:=add(((-1)^(i-1))*eknVC(k-i,n,x)*Pow(i,n,x), i=1..k):
+y:=k*eknVC(k,n,x):
+evalb(expand(s)=expand(y));
+end proc:
+
+#seq(seq(CheckNewton(k,n), n=k..5), k=1..5);
+#All true as expected
+
+#6. [Optional Challenge, 10 dollars] Implement this gem, i.e. program both sides of the bijection.
+
+WtFunc:=proc(A,j,l): local n, i: n:=nops(A): expand(((-1)^n)*mul(x[i], i in A)*(x[j]^l)); end proc:
+
+Tmap:=proc(A,j,l): local a, L, J:
+if j in A then
+a:=A minus {j};
+J:=j;
+L:=l+1;
+else
+a:=A union {j};
+J:=j;
+L:=l-1;
+end if;
+return(a,J,L);
+end proc:
+
+CoinFlipSet:=proc(n): local i, A: A:={}:
+for i from 1 to n do:
+if rand(1..2)=1 then
+A:=A union {i};
+end if; end do; A; end proc:
+
+Trial:=proc(n): local A, j, l:
+A:=CoinFlipSet(n):
+j:=rand(1..n):
+l:=rand(1..20):
+evalb(WtFunc(Tmap(A,j,l))=-WtFunc(A,j,l));
+end proc:
+
+#seq(Trial(20), i=1..100);
+#Returns 100 true values implying the bijection is valid and coded correctly

@@ -1,0 +1,173 @@
+#OK to post homework
+#Austin DeCicco, 2/22/26, Assignment 8
+
+#BEGIN REFORMATTED C8
+############################################################################################################################################################
+
+with(combinat):
+
+#xn(n): The solution of the recurrence xn(n)=(1+add(xn(i)^2,i=0..n-1))/n:
+xn:=proc(n) option remember: local i: if n=0 then 1; else (1+add(xn(i)^2,i=0..n-1))/n; end if; end proc:
+
+#xnC(n): clever version of xn(n) only having to remember what happened yesterday
+xnC:=proc(n) option remember: if n=1 then 2; else (xnC(n-1)+n-1)*xnC(n-1)/n; end if; end proc:
+
+#xnP(n,p): For a prime p, a fast way to compute xn(n) mod p for n<p, as long as it is an integer
+xnP:=proc(n,p) option remember: if n=1 then 2; else (xnP(n-1,p)+n-1)*xnP(n-1,p)*n^(-1) mod p; end if; end proc:
+
+#LtoR(pi): The list places that are larger than anything to the left pi=[2,1,4,3]
+LtoR:=proc(pi): local n, L, i, ma: n:=nops(pi): L:=[1]: ma:=pi[1]: for i from 2 to n do if pi[i]>ma then L:=[op(L), i ]; ma:=pi[i]; end if; end do; L; end proc:
+
+#ExtractCycle(pi,i): The cycle corresponding to the member i of the permutation pi For example ExtractCycle([2,1,4,3],1)=[1,2]
+ExtractCycle:=proc(pi,i): local C, ng: C:=[i]: ng:=pi[i]: while ng<>i do C:=[op(C),ng]: ng:=pi[ng]: end do; C; end proc:
+
+CycDec:=proc(pi): local n, i, StillToDo, S, C, ng: n:=nops(pi): StillToDo:={seq(i,i=1..n)}: S:={}: while StillToDo<>{} do ng:=StillToDo[1]:
+C:=ExtractCycle(pi,ng): S:=S union {C}: StillToDo:=StillToDo minus {op(C)}: end do; S; end proc:
+
+#CFC(C): inputs a list of numbers coming from a cycle and outputs the equivalent cycle where the largest entry is the first. CFC([4,6,1])= [6,4,1]
+CFC:=proc(C): local k: k:=max[index](C): [op(k..nops(C),C),op(1..k-1,C)]; end proc:
+
+#CycToPer(C): The reverse of CycDec(pi). Given a permutation in cycle structure, outputs it in 1-line notation. For example CycToPer({[1,2],[3,4]})=[2,1,4,3]
+CycToPer:=proc(C): local n,i,j,T: n:=add(nops(C[i]),i=1..nops(C)): for i from 1 to nops(C) do for j from 1 to nops(C[i])-1 do T[C[i][j]]:=C[i][j+1]:
+end do; T[C[i][-1]]:=C[i][1]: end do; [seq(T[i],i=1..n)]; end proc:
+
+#A-set of cycles, B-A after CFC, C-sorted B and transformed to list
+Foata:=proc(pi): local A, B, C, a, b, n, i: A:=CycDec(pi): B:={}: C:=[]: n:=nops(pi): for a in A do B:= B union {CFC(a)}: end do; for i from 1 to n do
+for b in B do if b[1]=i then C:= [op(C),op(b)]; end if; end do; end do; C; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C8
+
+#1. Show that for all primes p less than 43, if you compute (xnP(p-1,p)+p-1)*xnP(p-1,p) mod p you get 0, not enabling you to deduce that it stops producing integers,
+#   but for p=43 it breaks down, concluding that xn(43) is NOT an integer (even though it is too big to compute directly)
+
+[seq((xnP(p-1,p)+p-1)*xnP(p-1,p) mod p, p in {2,3,5,7,11,13,17,19,23,29,31,37,41,43})];
+
+#All zeros except for last entry, thus as desired xn(43) is NOT an integer but xn(n) is for n < 43.
+
+#2. Read and understand procedure Foata(pi) done by Austin DeCicco (and possibly other students), and verify that for all permutations of size ≤ 7,
+#   nops(LtoR(Foata(pi))=nops(CycDec(pi))
+
+TestFoata:=proc():
+local S, pi:
+S:=permute(7):
+for pi in S do
+if nops(LtoR(Foata(pi)))<>nops(CycDec(pi)) then
+return false;
+end if;
+end do;
+true;
+end proc:
+
+TestFoata();
+#Above command returns true, thus nops(LtoR(Foata(pi))=nops(CycDec(pi)) for all permutations of size ≤ 7
+
+#3. Convince yourself that the Foata bijection implies that for all integers n and k ≤ n, the number of permutations with k cycles equals the number of permutations with k Left-To-Right maxima
+
+#Yes because the cyclic decomp of a permutation, arranged in the way of Foata, forms a valid permuatation with k Left-To-Right maxima.
+
+#4. [A little bit challenging] Write a procedure AntiFoata(pi) that is the inverse of Foata(pi) that for every permutation pi of size ≤ 7 AntiFoata(Foata(pi))=pi and Foata(AntiFoata(pi))=pi
+
+#Gonna need these
+
+Override:=proc(pos,value,pi):
+[op(pi[1..pos-1]),value,op(pi[pos+1..nops(pi)])];
+end proc:
+
+CycToPerm:=proc(CycDecomp):
+local c, n, L, i:
+n:=0:
+for c in CycDecomp do
+n:=n+nops(c):
+end do;
+L:=[0$n]:
+for c in CycDecomp do
+for i from 1 to nops(c) do
+if i<>nops(c) then
+L:=Override(c[i],c[i+1],L);
+else
+L:=Override(c[i],c[1],L);
+end if;
+end do;
+end do;
+L;
+end proc:
+
+#Starting AntiFoata
+
+AntiFoata:=proc(pi):
+local A, p, i:
+A:={}:
+p:=LtoR(pi):
+for i from 1 to nops(p) do
+if i<>nops(p) then
+A:=A union {[op(pi[p[i]..p[i+1]-1])]};
+else
+A:=A union {[op(pi[p[i]..nops(pi)])]};
+end if;
+end do;
+CycToPerm(A);
+end proc:
+
+#Verifiying AntiFoata
+
+TestAntiFoata:=proc():
+local S, pi:
+S:=permute(7):
+for pi in S do
+if AntiFoata(Foata(pi))<>pi or Foata(AntiFoata(pi))<>pi then
+return false;
+end if;
+end do;
+true;
+end proc:
+
+TestAntiFoata();
+#Above command returns true, thus AntiFoata is working as desired
+
+#5. Write procedures xnk(n,k), xnkC(n,k), and xnkP(n,k,p) that give the first value (and those mod p) of the sequence defined by the recursion xnk(n,k)= (1+xnk(0,k)^k+...+xnk(n-1,k)^k)/n
+#   [Note that xnk(n,2) equals xn(n)] verify that for k=3, and k=4, the first 15 terms are integers.
+
+xnk:=proc(n,k) option remember: local i: if n=0 then 1; else (1+add(xnk(i,k)^k,i=0..n-1))/n; end if; end proc:
+
+xnkC:=proc(n,k) option remember: if n=1 then 2; else ((xnkC(n-1,k)^(k-1))+n-1)*xnkC(n-1,k)/n; end if; end proc:
+
+xnkP:=proc(n,k,p) option remember: if n=1 then 2; else ((xnkP(n-1,k,p)^(k-1))+n-1)*xnkP(n-1,k,p)*n^(-1) mod p; end if; end proc:
+
+seq(type(xnkC(i,3),integer),i=1..15);
+seq(type(xnkC(i,4),integer),i=1..15);
+
+#The above commands show that at for the first 15 terms both seqs are comprised of integers
+
+#6. [Optional challenge, 5 dollars, no peeking, I know the answer]
+#   Find the smallest n such that xnk(n,3) is NOT an integer (similar to 43 for k=2)
+
+FindPrimes:=proc(n):
+local S, s, i, check:
+S:={2,3,5,7,11,13,17,19,23,29,31,37,41,43}:
+for i from 47 to n do
+check:=false:
+for s in S do
+if i mod s = 0 then
+check:=true;
+end if;
+end do;
+if check = false then
+S:=S union {i};
+end if;
+end do;
+S;
+end proc:
+
+[seq(((xnkP(p-1,3,p)^2)+p-1)*xnkP(p-1,3,p) mod p, p in FindPrimes(100))];
+FindPrimes(100);
+
+#Comparing the two sequences we see the recurrence fails to produce integers after the 89-th term.
+
+#7. [Optional challenge, 6 dollars, no peeking, I don't know the answer]
+#   Find the smallest n such that xnk(n,4) is NOT an integer
+
+[seq(((xnkP(p-1,4,p)^3)+p-1)*xnkP(p-1,4,p) mod p, p in FindPrimes(100))];
+FindPrimes(100);
+
+#Comparing the two sequences we see the recurrence fails to produce integers after the 97-th term.

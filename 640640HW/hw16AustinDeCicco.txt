@@ -1,0 +1,232 @@
+#OK to post homework
+#Austin DeCicco, 4/1/26, Assignment 16
+
+#BEGIN REFORMATTED C12
+############################################################################################################################################################
+
+with(combinat):
+
+#Park(n,k): The set of partitions of n into exactly k parts
+Park:=proc(n,k) option remember: local S, k1, S1, s1: if n<k then RETURN({}); end if; if k=0 then if n=0 then RETURN({[]}); else RETURN({}); end if; end if;
+S:={}: for k1 from 0 to k do S1:=Park(n-k,k1): S:= S union {seq([op(s1+[1$k1]),1$(k-k1)], s1 in S1)}: end do; S; end proc:
+
+#Par(n): The set of partitions of n, the clever way.
+Par:=proc(n): local k: {seq(op(Park(n,k)), k=1..n)}; end proc:
+
+#A41s(N): OEIS sequence A41 done stupidly (construct the actual set) and take the cardinality
+A41s:=proc(N): local n: [seq(nops(Par(n)),n=1..N)]; end proc:
+
+#A41ok(N): OEIS sequence A41 done much more efficiently using Euler's generating function Sum(p(n)*q^n,n=0..infinity)=Prod(1/(1-q^k), k=1..infinity)
+A41ok:=proc(N): local k, f, q: f:=mul(1/(1-q^k),k=1..N): f:=taylor(f,q=0,N+4): [seq(coeff(f,q,k),k=1..N)]; end proc:
+
+#EulerM(N,q): The truncation to 1^N of Prod(1-q^k, k=1..infinity)
+EulerM:=proc(N,q): local f, k: f:=mul(1-q^k,k=1..N): f:=taylor(f,q=0,N+1); end proc:
+
+#ConjP(N): The conjectured powers of the polynomial in EulerM
+ConjP:=proc(N): local j, L: L:=[]: for j from 1 to N while (3*j^2-j)/2<=N do L:=[op(L),(3*j^2-j)/2]: end do; for j from 1 to N while (3*j^2+j)/2<=N do
+L:=[op(L),(3*j^2+j)/2]: end do; sort(L); end proc:
+
+#EPTtest(N): testing Euler's pentagonal numbers (3*j^2+j)/2
+EPTtest:=proc(N): local q, j, f, g, k: f:=mul(1-q^k,k=1..N):
+g:=add((-1)^j*q^((3*j^2+j)/2), j=1..trunc(2*sqrt(N/3)+1))+add((-1)^j*q^((3*j^2-j)/2), j=1..trunc(2*sqrt(N/3)+1)): taylor(f-g,q=0,N+1); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C12
+
+#BEGIN REFORMATTED C13
+############################################################################################################################################################
+
+#PFG(L): The Ferrers graph of the partition L
+PFG:=proc(L): local i: for i from 1 to nops(L) do lprint(1$L[i]): end do; print(`----------------`): end proc:
+
+#SYT(L): The SET of Standard Young tableaux of shape L
+SYT:=proc(L) option remember: local i, k, n, S, L1, S1, s1: k:=nops(L): n:=add(L[i],i=1..k): if k=0 then RETURN({[]}); end if; S:={}:
+for i from 1 to k-1 do if L[i]>L[i+1] then L1:=[op(1..i-1,L),L[i]-1,op(i+1..k,L)]; S1:=SYT(L1);
+S:=S union {seq([op(1..i-1,s1),[op(s1[i]),n],op(i+1..k,s1)],s1  in S1)}; end if; end do;
+if L[k]>1 then L1:=[op(1..k-1,L),L[k]-1]; S1:=SYT(L1); S:=S union {seq([op(1..k-1,s1),[op(s1[k]),n]],s1  in S1)};
+else L1:=[op(1..k-1,L)]; S1:=SYT(L1); S:=S union {seq([op(1..k-1,s1), [n]],s1  in S1)}; end if; S; end proc:
+
+#PSYT(Y): prints the SYT Y
+PSYT:=proc(Y): local i: for i from 1 to nops(Y) do lprint(op(Y[i])): end do; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C13
+
+#BEGIN REFORMATTED C14
+############################################################################################################################################################
+
+#RS11(a,i): inputs an INCREASING list of positive integers, a, and another positive integer i outputs a pair a1,j, where (usually a1 is of the same length as a)
+#and i is put where it belongs and j is the entry that it bumped, unless i is larger than all the members of a (i.e. larger than a[-1]) then a1 is [op(a),i], and j is 0
+RS11:=proc(a,i): local k, j: k:=nops(a): for j from 1 to k while a[j]<i do end do; if j=k+1 then RETURN([op(a),i],0); end if; [op(1..j-1,a),i,op(j+1..k,a)],a[j]; end proc:
+
+NuSYTpairs:=proc(n) option remember: local S, P, p: P:=Par(n): S:=0: for p in P do S:=S+NuSYT(p)^2: end do; S; end proc:
+
+SYTpairs:=proc(n) option remember: local S, P, p, S1, s1, s2: P:=Par(n): S:={}: for p in P do S1:=SYT(p):
+S:= S union {seq(seq([s1,s2], s1 in S1), s2 in S1)}: end do; S; end proc:
+
+#NuSYT(L): The NUMBER of Standard Young tableaux of shape L
+NuSYT:=proc(L) option remember: local i, k, S, L1: k:=nops(L): if k=0 then RETURN(1); end if; S:=0: for i from 1 to k-1 do if L[i]>L[i+1] then
+L1:=[op(1..i-1,L),L[i]-1,op(i+1..k,L)]; S:=S+NuSYT(L1); end if; end do; if L[k]>1 then L1:=[op(1..k-1,L),L[k]-1]; S:=S+ NuSYT(L1); else
+L1:=[op(1..k-1,L)]; S:=S+NuSYT(L1); end if; S; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C14
+
+#BEGIN REFORMATTED C16
+############################################################################################################################################################
+
+#C16.txt, March 23, 2026
+Help16:=proc(): print(`RSleft(pi), RS1(Y,i), RS(pi) `): end:
+
+#RS1(Y,i): inputs a partial Young tableau and another integer i NOT yet in Y places it in the right place,
+#by a bumping process it returns a tableau with one more box followed by the name of the row where it settled
+RS1:=proc(Y,i): local k, NewY, lucy, bumpee, i1, j: if Y=[] then RETURN([[i]],1); end if; k:=nops(Y):
+lucy:=RS11(Y[1],i): NewY[1]:=lucy[1]: bumpee:=lucy[2]: if bumpee=0 then RETURN([NewY[1],op(2..k,Y)],1);
+end if; for i1 from 2 to k  while bumpee<>0 do lucy:=RS11(Y[i1],bumpee): NewY[i1]:=lucy[1]: bumpee:=lucy[2]:
+if bumpee=0 then RETURN([seq(NewY[j],j=1..i1),op(i1+1..k,Y)],i1); end if; end do; [seq(NewY[j],j=1..k),[bumpee]],k+1; end proc:
+
+#RS(pi): inputs a permutation pi of ({1, ..., n:=nops(pi)) and outputs a pair of SYT of the SAME shape (with n boxes) The Robinson-Schenstead algorithm
+RS:=proc(pi): local Yl, i, Yr, eaea, p: if pi=[] then RETURN([[],[]]); end if; Yl:=[[pi[1]]]: Yr:=[[1]]: for i from 2 to nops(pi) do eaea:=RS1(Yl,pi[i]):
+Yl:=eaea[1]: p:=eaea[2]: if p<=nops(Yr) then Yr:=[op(1..p-1,Yr),[op(Yr[p]),i],op(p+1..nops(Yr),Yr)]; else Yr:=[op(Yr),[i]]; end if; end do; [Yl, Yr]; end proc:
+
+#RSeft(pi): inputs a permutation pi (of size nops(pi)) and outputs of whatever shape (with n boxes)
+RSleft:=proc(pi): local Y, i: Y:=[]: for i from 1 to nops(pi) do Y:=RS1(Y,pi[i])[1]: end do; Y; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C16
+
+#1. Write a procedure AntiRS(Pair) That inputs a members SYTpairs(n)=[P,Q] and outputs a permutation pi of {1, ..., n} such that RS(pi)=[P,Q].
+#   Check that {seq(evalb(AntiRS(RS(pi))=pi), pi in permute(n))}={true} for n from 2 to 7.
+#   Also check that {seq(evalb(RS(AntiRSRS(s))=s), s in SYTpairs(n)}={true}
+
+#Finds Max index in Q, more reliably than max[index](Q)
+MaxIndex:=proc(Q):
+local i, j, maxval, pos;
+maxval := -infinity:
+pos := [1,1]:
+for i from 1 to nops(Q) do
+for j from 1 to nops(Q[i]) do
+if Q[i][j] > maxval then
+maxval := Q[i][j]:
+pos := [i,j]:
+end if;
+end do;
+end do;
+return(pos);
+end proc:
+
+#Finds the next lowest digit in pi to n and returns it and it's position in pi
+FindBelow:=proc(pi,n): local i, value:
+value:=0: for i from 1 to nops(pi) do
+if pi[i] < n then value:=pi[i]; end if;
+if pi[i] > n then return([value,i-1]); end if;
+end do; return([value,nops(pi)]); end proc:
+
+#Undoes the RS bump for a line of a SYT and returns the old line and the value that bumped
+ReplaceBump:=proc(pi,value):
+local col, bump, fb:
+if nops(pi) < 1 then return([],0); end if;
+bump:=0:
+col:=0:
+fb:=FindBelow(pi,value):
+bump:=fb[1]:
+col:=fb[2]:
+if col=nops(pi) then return([[op(pi[1..col-1]),value],bump]); end if;
+if col=1 then return([[value,op(pi[2..nops(pi)])],bump]); end if;
+return([[op(pi[1..col-1]),value,op(pi[col+1..nops(pi)])],bump]);
+end proc:
+
+#Takes a P, along with the position of the newest square and the value on that square
+#and returns the old P through a reverse RS algo along with the last value added to P 
+DeBump:=proc(P,value,last): local bumper, i, j, PA, n, L, v:
+PA:=[]: n:=nops(P): v:=value:
+if last[1]<n then
+for j from last[1]+1 to n do
+PA:=[P[n+last[1]+1-j],op(PA)]:
+end do; end if;
+if last[2] <> 1 then PA:=[[op(P[last[1]][1..last[2]-1])],op(PA)] end if;
+for i from 1 to last[1]-1 do
+L:=ReplaceBump(P[last[1]-i],v):
+PA:=[L[1],op(PA)]: v:=L[2]:
+end do;
+return([PA,v]):
+end proc:
+
+AntiRSAssembly:=proc(Pair): local last, P, Q, value, PA, QA, bumper:
+P:=Pair[1]: Q:=Pair[2]:
+last:=MaxIndex(Q):
+value:=P[last[1]][last[2]]:
+if last[1]=1 and last[2]=1 then
+PA:=[op(P[2..nops(P)])];
+QA:=[op(Q[2..nops(Q)])];
+return([PA,QA,value]);
+end if;
+if last[1]=1 then
+PA:=[P[1][1..last[2]-1],op(P[2..nops(P)])];
+QA:=[Q[1][1..last[2]-1],op(Q[2..nops(Q)])];
+return([PA,QA,value]);
+end if;
+bumper:=DeBump(P,value,last):
+QA:=[op(Q[1..last[1]-1]),[op(Q[last[1]][1..last[2]-1]),op(Q[last[1]][last[2]+1..nops(Q[last[1]])])],op(Q[last[1]+1..nops(Q)])];
+return([bumper[1],QA,bumper[2]]);
+end proc:
+
+AntiRS:=proc(Pair): local P, Q, pi, working:
+P:=Pair[1]: Q:=Pair[2]:
+pi:=[]:
+while nops(P)>0 do
+working:=AntiRSAssembly([P,Q]):
+pi:=[working[3],op(pi)]:
+P:=working[1]:
+Q:=working[2]:
+end do;
+pi;
+end proc:
+
+#{seq({seq(evalb(AntiRS(RS(pi))=pi), pi in permute(n))},n=2..7)};
+#Returns true as desired
+
+#{seq({seq(evalb(RS(AntiRS(s))=s), s in SYTpairs(n))},n=2..7)};
+#Returns true as desired
+
+#2. Verify experimentally that if RS(pi)=[P,Q] then RS(pi^-1)=[Q,P] for all permutations pi of length up to 7. Can you prove it?
+
+#Inverts perm
+Invert:=proc(pi): 
+local p, i, n:
+n:=nops(pi):
+for i from 1 to n do
+p[pi[i]]:=i:
+end do;
+[seq(p[i],i=1..n)];
+end proc:
+
+Experiment:=proc():
+local check, P, pi, n:
+check:=true:
+for n from 1 to 7 do
+P:=permute(n):
+for pi in P do
+if RS(pi)[1]<>RS(Invert(pi))[2] or RS(pi)[2]<>RS(Invert(pi))[1] then
+check:=false; end if; end do; end do; check; end proc:
+
+#Experiment();
+#Returns true as desired
+
+#Proof by intuition:
+#Denote RS(pi^-1)=[P^-1,Q^-1].
+#P records the values of pi depending on the positions and distorted by the RS bumping process, which is invertible
+#Q records the positions of pi depending on the values and distorted by the RS bumping process
+#Inverting pi swaps values and positions in pi, aka values^-1 = positions and vice versa
+#P^-1 records the values of pi^-1 depending on the positions and distorted by the RS bumping process
+#P^-1 records the values^-1 of pi depending on the positions^-1 and distorted by the RS bumping process
+#P^-1 records the positions of pi depending on the values and distorted by the RS bumping process
+#Thus P^-1 = Q. Similar argument for Q^-1 = P. QED
+
+
+
+
+
+
+
+

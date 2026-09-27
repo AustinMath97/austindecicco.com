@@ -33,6 +33,13 @@
    Applies to all pages
 ================================ */
 
+/* Always reserve the scrollbar so short pages (e.g. undergrad.html) get the
+   same viewport width as long ones; otherwise the fixed "cover" background
+   is scaled differently and looks zoomed in. */
+html {
+  overflow-y: scroll;
+}
+
 body {
   font-family: Arial, Helvetica, sans-serif;
   max-width: 800px;
@@ -48,6 +55,12 @@ body {
   background-position: center;
   background-attachment: fixed;
   padding: 0 15px;
+}
+
+/* Tighter spacing for headings that wrap onto two lines (mostly on phones);
+   paragraphs keep the body's 1.6 line-height. */
+h1, h2, h3, h4, h5 {
+  line-height: 1.25;
 }
 
 h1 {
@@ -139,7 +152,7 @@ address {
 /* ================================
    COURSE / SECTION HEADINGS
    Used on grad.html, undergrad.html,
-   fun.html, gradp.html
+   fun.html, gradprojects.html
 ================================ */
 
 h4.course-title,
@@ -220,7 +233,7 @@ h5.course-title.section-label {
 
 /* ================================
    PROJECT CARDS
-   Used on fun.html and gradp.html
+   Used on fun.html and gradprojects.html
 ================================ */
 
 .project {
@@ -253,7 +266,7 @@ h5.course-title.section-label {
 
 /* ================================
    DATASET DROPDOWN
-   Used only on gradp.html
+   Used only on gradprojects.html
 ================================ */
 
 .dataset-dropdown {
@@ -302,7 +315,7 @@ h5.course-title.section-label {
 
 /* ================================
    DOWNLOAD BUTTONS
-   Used on gradp.html dataset section
+   Used on gradprojects.html dataset section
 ================================ */
 
 .download-btn {

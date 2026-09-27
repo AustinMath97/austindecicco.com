@@ -1,0 +1,234 @@
+#OK to post homework
+#Austin DeCicco, 1/30/26, Assignment 3
+
+Help:=proc():
+print("Mul(pi::list,sig::list), Ord(pi::list)"):
+end proc:
+
+#3. Write a procedure Mul(pi,sig) that inputs permutations pi, sig of the same length (n) and outputs the product (i.e. composition in the sense of functions)
+#   defined by sig[pi[i]], i=1..n. For example Mul([3,1,4,2],[4,1,2,3])=[2,4,3,1].
+
+#Initializing procedure
+
+Mul:=proc(pi::list,sig::list):
+local n, i, out::list:
+
+#Defining locals
+
+n:=nops(pi):
+out:=[]:
+
+#Checking inputs
+
+if n<>nops(sig) then return("pi and sig must be equal length");
+end if;
+
+#Forming output
+
+for i from 1 to n do
+out:=[op(out),sig[pi[i]]]:
+end do;
+
+#Wrapping-up
+
+out;
+end proc:
+
+#4. Using Mul, write a procedure Ord(pi) that finds the set of permutations of {1, ...,n} such that pi^k is the identity permutation.
+#   For example Ord([3,2])={[1,2,3],[1,3,2],[3,2,1],[2,1,3]}.
+
+#Initializing procedure
+
+Ord:=proc(pi::list):
+local p1, p2, i, j, ID::list, S::set, perms::set, candidate::list, interm::list:
+
+#Defining locals
+p1:=pi[1]:
+p2:=pi[2]:
+S:={}:
+ID:=[]:
+perms:={}:
+
+#Checking inputs
+
+if nops(pi)<>2 then return("pi must be a list of two integers");
+end if;
+if type(p1,integer)=false then return("pi must be a list integers");
+end if;
+if type(p2,integer)=false then return("pi must be a list integers");
+end if;
+
+#Constructing ID & perms
+
+with(combinat):
+perms:=permute(p1):
+for i from 1 to p1 do
+ID:=[op(ID),i]:
+end do;
+
+#Running brute force calcualtion over permute(p1)
+
+for i from 1 to nops(perms) do
+candidate:=[op(perms[i])]:
+interm:=candidate:
+for j from 1 to p2-1 do
+interm:=Mul(candidate,interm):
+end do;
+if interm=ID then
+S:=S union {candidate};
+end if;
+end do;
+
+#Wrapping-up
+
+S;
+end proc:
+
+#5. Is the sequence [seq(OrdPer(i,2),i=1..8)] in the OEIS? If yes, what is its A number?
+
+seq(nops(Ord([i,2])),i=1..8);
+
+#Yes, A-number: A000085 + 9 others
+
+#6. [Optional Human challenge, 5 dollars to be divided, no peeking] Prove that the number of derangements of {1, ..., n}
+#   satisfies the second-order recurrence d(n)=(n-1)*d(n-1)+(n-1)*d(n-2).
+#   [Hint, if you look at the permutation in cycle decomposition, a derangement has no 1-cycles]. Look where n can reside.
+
+#Gathering thoughts/rough proof, concise proof below
+
+#I'll first generate some derangements and see what patterns jump out:
+FP:=proc(pi):local n, i, co:n:=nops(pi):co:=0: for i from 1 to n do if pi[i]=i then co:=co+1;
+end if; end do; co; end proc: Der := proc(n): local S, pi, DE: S:=permute(n): DE:={}:
+for pi in S do if FP(pi)=0 then DE:=DE union {pi}; end if; end do; DE; end proc:
+#(DELETE THIS TO PRINT OUTPUT)Der(3); Der(4);
+#Comparing n=3 to n=4, the first thing I see is unlike HW 2 Question 6, these sets don't have the property where if you remove n from an element of der(n), you always get an element in der(n-1).
+#Start of this sequence, d(0)=1, d(1)=0, d(2)=1, d(3)=2...
+#The backwards identity permutation is a valid pattern if n is even, implying the parity of n may be significant.
+#Starting from the conjecture, lets symbolically expand out d(n) to see if that could give us insight to reverse engineer the thought process that created this theorem.
+#d(2)=(n-1), d(3)=(n-1)(n-2), d(4)=(n-1)(n-2)(n-3)+(n-1)(n-3)
+#d(5)=(n-1)(n-2)(n-3)(n-4)+(n-1)(n-2)(n-4)+(n-1)(n-3)(n-4)=(n-1)!+(n-1)!/(n-3)+(n-1)!/(n-2)
+#d(6)=(n-1)!+(n-1)(n-2)(n-5)(n-3)+(n-1)(n-2)(n-5)(n-4)+(n-1)(n-3)(n-4)(n-5)+(n-1)(n-3)(n-5)
+#=(n-1)!+(n-1)!/(n-4)+(n-1)!/(n-3)+(n-1)!/(n-2)+(n-1)!/(n-4)(n-2)
+#There's a few possible structures emerging from the symbolic expansion. The most obvious one is the persistant presence of (n-1)!, I believe this points to a trivial method of construction which I will now attempt to find.
+#Let's begin by fixing n in any place but the n-th (n-1 options), call it the i-th, then we take i and place it in any of the n-2 options, as we will leave the n-th position reserved for our last placement to avoid making a cycle.
+#Once we have placed i in the j-th position, we again take j and the n-3 options... We have now found a trivial way to constuct (n-1)! derangements.
+#Perhaps now I should listen to the hint and think about cycles. Perhaps a useful question is what's the maximum degree of seperation possible when picking the value with the minimum.
+#Trivially it must be that maximum degree of seperation <= n/2. How many cycles are possible in a derangement? n/2.
+#Let's consider trying to place n in a valid derangement of n-1. We could pick any of the n-1 values in our valid derangement of n-1, call our selection x, we swap n with x, x is now in n-th position and n is in i-th<>x-th.
+#It's important to note that any valid derangement of n derived this way cannot be derived starting at a different derangement of n-1 with the same process, i.e. this process is injective.
+#Therefore we get the lower bound of d(n)>=(n-1)d(n-1).
+#Let's consider trying to place n and n-1 in a valid derangement of n-2. We have to be careful about constructive overlap with our previous process. It is natural to try placing n-1 in n-th, n in i-th, and j<>i into the (n-1)-th.
+#However we can observe this process for construction overlaps with trying to place n in a valid derangement of n-1 with x=n-1.
+#We can also swap the order so n is in (n-1)-th, j in n-th, n-1 in i-th, but this again overlaps. Another trivial construction of placing n in (n-1)-th and n-1 in n-th again overlaps.
+#Or does it? For example [4,3,2,1,6,5] is not attainable from the first process as n-1 would have had to have been in the (n-1)-th position.
+#Let's analyze these constructive methods through brute force
+#This will find the conjecture's sequence.
+Calc:=proc(d) option remember: local r: if d>1 then r:=(d-1)*(Calc(d-1)+Calc(d-2)); else if d=1 then r:=0; end if; if d=0 then r:=1; end if; end if; r; end proc:
+#(DELETE THIS TO PRINT OUTPUT)seq(Calc(i),i=1..8);
+#This will construct a subset of der(n) obtained from the construction process beginning at der(n-1).
+Con1der:=proc(n): local n1, i, S, derg::list: n1:=Der(n-1): S:={}: for derg in n1 do for i from 1 to n-1 do S:= S union {[op(1..i-1,derg),n,op(i+1..n-1,derg),derg[i]]}: end do; end do; S; end proc:
+#This will construct a subset of der(n) unobtained from the construction process beginning at der(n-1).
+MCon1der:=proc(n): local S: S:=Der(n) minus Con1der(n): S; end proc:
+#Now we'll look at the missing constructions and see what patterns are evident.
+#(DELETE THIS TO PRINT OUTPUT)MCon1der(5);
+#Any derangement of n-2 can have n placed in (n-1)-th, n-1 in n-th and we arrive at a derangement of n that was not possible through the first constructive process, as again n-1 would needed to have been in (n-1)-th.
+#New lower bound of d(n)>=(n-1)d(n-1)+d(n-2), we'll make a function using this new construction pattern and reanalyze the missing derangements.
+Con2der:=proc(n): local n2, i, S, derg: n2:=Der(n-2): S:={}: for derg in n2 do for i from 1 to n-1 do S:= S union {[op(derg),n,n-1]}: end do; end do; S; end proc: C2:=proc(n): local S: S:=MCon1der(n) minus Con2der(n); S; end proc:
+#(DELETE THIS TO PRINT OUTPUT)C2(6);
+#We see now that more generally, there are (n-1)d(n-2) invalid derangements of n-1 with one value in it's own position that we could make valid using the same process described above to place n in a valid derangement of n-1.
+#We arrived at a new lower bound of d(n)>=(n-1)d(n-1)+(n-1)d(n-2).
+#Let's experimentally confirm this for a sanity check. To do this we'll need a modified version of Der() and Con1der() to allow some precise invalid arrangements of Der(n-1) to enter the "assembly line" of Con1der(n).
+DerM := proc(n): local S, pi, DE: S:=permute(n): DE:={}: for pi in S do if FP(pi)=1 then DE:=DE union {pi}; end if; end do; DE; end proc:
+Con1derM:=proc(n): local n1, a, n1M, i, j, S, derg::list, dergM::list: n1:=Der(n-1): S:={}: for derg in n1 do for i from 1 to n-1 do S:= S union {[op(1..i-1,derg),n,op(i+1..n-1,derg),derg[i]]}: end do; end do;
+n1M:=DerM(n-1): for dergM in n1M do for j from 1 to n-1 do if dergM[j]=j then a:=j; end if; end do; S:= S union {[op(1..a-1,dergM),n,op(a+1..n-1,dergM),dergM[a]]}: end do; S; end proc: 
+MCon1derM:=proc(n): local S: S:=Der(n) minus Con1derM(n): S; end proc:
+#The following command will hopefully print an empty set, if it does for all n then this method for inserting n into permutations of n-1 with FP(permutation) < 2 can form every element of Der(n).
+#(DELETE THIS TO PRINT OUTPUT)MCon1derM(7);
+#It does in fact print the empty set implying that this might also be the upper bound, and hence the conjecture is true.
+#Finally we can use cycles, since a derangement has no 1 cycles a new cycle can only be added every two jumps, from n-2 to n.
+#Our process for inserting n into a valid Der(n-1) inserts n into a present cycle, it cannot create a new cycle, this is in my opinion trivial but I will show it.
+#Suppose we swap n with y and put y in the n-th, then the previous cycle xyz is now clearly xnyz. Importantly, this process covers all ways you could ever want to insert n into a cycle as well.
+#Our process for inserting n into a invalid Der(n-1) with FP(permutation) = 1 creates a new cycle with n and the fixed point.
+#Since we are doing this over the whole space of invalid Der(n-1) with FP(permutation) = 1 this process results in a set where,
+#any way you could want to divid up cycles and add another to an element of Der(n-1) is an element of this set.
+#Since all we could ever do is add or keep the same amount of cycles by adding n to into the permutation this process must cover all ways to construct Der(n).
+#Thus we arrive at d(n)=(n-1)d(n-1)+(n-1)d(n-2). QED
+
+#Concise proof
+
+#This proof is by construction and then reasoning over the amount of cycles.
+#How many cycles are possible in a derangement? n/2.
+#All we could ever do is add or keep the same amount of cycles by swapping a value, x, in a permutation of n-1 to n and placing x into the n-th position.
+#This is trivial as if x was part of a cycle bigger than 1, say xy, then x is a part of a new cycle nxy. If x was part of a 1-cycle then nx is now a cycle.
+#If we define two processes, one for all the ways you could keep the amount of cycles the same moving from a valid derangement of n-1 and
+#all of the ways you could add a cycle we could define the whole process for building Der(n).
+#The first process is trivial and is actually described above, just add n at the end of Der(n-1) then swap it's position with any of the values, x.
+#Proof: n is not in it's position, neither is x nor any other values by valid Der(n-1), proof of not adding cycles described above.
+#This implies d(n)>=(n-1)d(n-1).
+#It's now important to observe that since we can only add a cycle to a Der(n-1) by inserting n if there is a fixed point, but if there is then it's not a valid Der(n-1).
+#So it's impossible to add a cycle by inserting n into a valid Der(n-1) to form a valid Der(n).
+#It is however possible to do on permutations with fixed points. If it has more than one fixed point, it will still have fixed points after the first process.
+#If it has one however, as shown this process would make a 2-cycle, which means no more fixed points and we have formed a valid Der(n).
+#How many permutations of n-1 have 1 fixed point? Trivially it's all the places to put one fixed point times the amount of ways to arrange n-2 things with no fixed points.
+#Thus, (n-1)d(n-2). Since we have defined a process for constructing a valid Der(n) from inserting n into any permutation of n-1 with fixed points of 1 or less
+#and shown it's impossible to do this if fixed points are greater than 1 and importantly any permutation of n can be achieved by inserting n into a permutation of n-1,
+#this process must make all valid members of Der(n). Therefore d(n)=(n-1)d(n-1)+(n-1)d(n-2). QED
+
+#Also corollary, d(n) is n-1 times number of derangements of n-1 + number of permutations of n-1 with 1 fixed pointed.
+
+#Code to construct Der(n) from permutations of n-1 with FP(permutation) < 2.
+
+#This will make a set or permutations of n-1 with FP = 1.
+Der1 := proc(n):
+local S, pi, DE:
+S:=permute(n):
+DE:={}:
+for pi in S do
+if FP(pi)=1 then
+DE:=DE union {pi};
+end if;
+end do;
+DE;
+end proc:
+
+#This will construct Der(n) from permutations of n-1 with FP(permutation) < 2.
+Con1der1:=proc(n):
+local n1, a, n2, i, j, S, derg::list, derg1::list:
+n1:=Der(n-1):
+S:={}:
+for derg in n1 do
+for i from 1 to n-1 do
+S:= S union {[op(1..i-1,derg),n,op(i+1..n-1,derg),derg[i]]}:
+end do;
+end do;
+n2:=Der1(n-1):
+for derg1 in n2 do
+for j from 1 to n-1 do
+if derg1[j]=j then
+a:=j;
+end if;
+end do;
+S:= S union {[op(1..a-1,derg1),n,op(a+1..n-1,derg1),derg1[a]]}:
+end do;
+S;
+end proc: 
+
+#7. Prove that the above second order recurrence implies the first order (inhomog.) recurrence d(n)=n*d(n-1)+(-1)^n
+#   Hint: It is easier to prove that the latter recurrence implies the former, then use the fact that d(n)-n*d(n-1)=(-1)^n,
+#   implies d(n)-n*d(n-1)=(-1)*(d(n-1)-(n-1)*d(n-2).
+
+#Let's start by recursively applying the formula. d(n)=(n-1)d(n-1)+(n-1)d(n-2) -> d(n)=n*d(n-1)-d(n-1)+(n-1)d(n-2) -> d(n)=n*d(n-1)-((n-2)d(n-2)+(n-2)d(n-3))+(n-1)d(n-2) -> 
+#d(n)=n*d(n-1)+d(n-2)-(n-2)d(n-3) note the latter part, d(n-2)-(n-2)d(n-3), is the same as the part we just simplified, -d(n-1)+(n-1)d(n-2), just with opposite sign and n = n-1.
+#Therefore we can race to the end of this decomposition and get d(n)=n*d(n-1)+d(1)-d(0) if n was odd and d(n)=n*d(n-1)-d(1)+d(0) if n was even.
+#Thus we have d(n)=(n-1)d(n-1)+(n-1)d(n-2) --> d(n)=n*d(n-1)+(-1)^n. QED
+
+#8. [Optional challenge, 1 dollar] prove that d(n)=n*d(n-1)+(-1)^n impies that the limit of d(n)/n! as n goes to infinity is 1/e.
+
+#e^x = sum (x^n)/n! from 0 to inf. d(n)/n!=d(n-1)/(n-1)! + ((-1)^n)/n!. Applying recursively and rushing to the end based on the obvious pattern we get,
+#d(n)/n!=((-1)^n)/n!+((-1)^(n-1))/(n-1)!+...+((-1)^2)/2!+((-1)^1)/1!+d(0)/0! -> d(n)/n!=((-1)^n)/n!+((-1)^(n-1))/(n-1)!+...+1/2-1+1 -> d(n)/n!=((-1)^n)/n!+((-1)^(n-1))/(n-1)!+...+1/2
+#We now have the series 1/2! - 1/3! + 1/4! - 1/5! + .... this can be written as the sum ((-1)^n)/n! from 2 to inf.
+#All we're missing is the range from n=0 and n=1 to match this to e^(-1), but wait ((-1)^0)/0! + ((-1)^1)/1! = 0, so the ranges are identical.
+#Thus d(n)/n!=1/e as n goes to infinity. QED
+
+
+

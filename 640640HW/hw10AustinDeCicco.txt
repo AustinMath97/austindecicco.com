@@ -1,0 +1,322 @@
+#OK to post homework
+#Austin DeCicco, 2/25/26, Assignment 10
+
+#Summary of procs
+#CompsMod(n,a,S) - As desired for Q1
+#OddParStupid(n) - As desired for Q2
+#DistinctParStupid(n) - As desired for Q3
+#ContainsEven(pi), FirstEven(pi), SplitPart(pos,pi), HasTwins(pi), TwinFinder(pi), MergeTwins(index,pi) - Supporting procs for Q5
+#Distinct2Odd(S), Odd2Distinct(S) - Transformation functions for bijection in Q5
+#binvectorspace(n) - Binary Vector Space described in Q6
+#Bin2Comps(S), Comps2Bin(S) - Transformation functions for bijection in Q6
+#OddComps(n), OneTwos(n) - Sets described in Q7
+#OneTwos2OddComps(S), OddComps2OneTwos(S) - Transformation functions for bijection in Q7
+
+#BEGIN REFORMATTED C10
+############################################################################################################################################################
+
+with(combinat):
+
+#xnk(n,k): The solution of the recurrence  xn(n)=(1+add(xn(i)^2,i=0..n-1))/n: From Austin DeCicco and others
+xnk:=proc(n,k) option remember: local i: if n=0 then 1; else (1+add(xnk(i,k)^k,i=0..n-1))/n; end if; end proc:
+
+#xnkC(n,k): clever version of xn(n) only having to remember what happened yesterday From Austin DeCicco and others
+xnkC:=proc(n,k) option remember: if n=1 then 2; else (xnkC(n-1,k)^(k-1)+n-1)*xnkC(n-1,k)/n; end if; end proc:
+
+#xnkP(n,k,p): For a prime p, a fast way to compute xnk(n,k) mod p for n<p, as long as it is an integer From Austin DeCicco and others
+xnkP:=proc(n,k,p) option remember: if n=1 then 2; else (xnkP(n-1,k,p)^(k-1)+n-1)*xnkP(n-1,k,p)*n^(-1) mod p; end if; end proc:
+
+#AD(k): Inspired by Austin DeCicco: the first term of the sequence xnk(n,K) that is NOT an integer
+AD:=proc(k): local i, ip: ip:=ithprime: for i from 1 to 1000 while (xnkP(ip(i) - 1,k,ip(i))^(k-1)+ip(i) - 1)*xnkP(ip(i) - 1,k,ip(i)) mod ip(i)=0 do end do; ip(i); end proc:
+
+#Comps(n): The set of compositions of n. For example, Comps(3) is {[3],[1,2],[2,1],[1,1,1]}.
+Comps:=proc(n) option remember: local S, i, S1, s1: if n<0 then RETURN({}); end if; if n=0 then RETURN({[]}); end if; S:={}: for i from 1 to n do
+S1:=Comps(n-i): S:=S union {seq([i,op(s1)],s1 in S1)}: end do; S; end proc:
+
+#CompsG(n,A): The set of compositions of n whose entries are from the set A
+CompsG:=proc(n,A) option remember: local S, i, S1, s1: if n<0 then RETURN({}); end if; if n=0 then RETURN({[]}); end if; S:={}: for i in A do
+S1:=CompsG(n-i,A): S:=S union {seq([i,op(s1)],s1 in S1)}: end do; S; end proc:
+
+#ParS(n): The set of partitions of n, done stupidly, by first finding Comps(n) and then sorting them
+ParS:=proc(n): local S, s: S:=Comps(n): {seq(sort(s, `>`), s in S)}; end proc:
+
+#Park(n,k): The set of partitions of n into exactly k parts
+Park:=proc(n,k) option remember: local S, k1, S1, s1: if n<k then RETURN({}); end if; if k=0 then if n=0 then RETURN({[]}); else RETURN({}); end if; end if;
+S:={}: for k1 from 0 to k do S1:=Park(n-k,k1): S:= S union {seq([op(s1+[1$k1]),1$(k-k1)], s1 in S1)}: end do; S; end proc:
+
+#Par(n): The set of partitions of n, the clever way.
+Par:=proc(n): local k: {seq(op(Park(n,k)), k=1..n)}; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C10
+
+#1. Using procedure CompsG(n,A) Write a procedure CompsMod(n,a,S) that inputs a positive integer n, a positive integer a and a subset S of {0,1,..., a-1} and outputs
+#   the set of compositions of n whose entries mod a belong to S. For example CompsMod(n,1,{0}) is the same as Comps(n), and Comps(n,2,{1}) gives the set of compositions into odd parts.
+#   [Hint: the set of integers of the form s (mod a) is {seq(a*i+s,i=0..infinity)} but you can safely replace it by {seq(a*i+s,i=0..n)} (and even {seq(a*i+s,i=0..trunc(n/a))} (why?)]
+
+CompsMod:=proc(n,a,S):
+local A, s, i:
+A:={}:
+for s in S do
+A:=A union {seq(a*i+s,i=0..trunc(n/a))}:
+end do;
+CompsG(n,A);
+end proc:
+
+#CompsMod(5,2,{1});
+#Verified to be working
+
+#1. Which of the following sequences are in the OEIS, if there are what are their A numbers. what is the desription?
+
+#[seq( nops(CompsMod(n,2,{1})),n=1..10)];
+#Output: [1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
+#A number: A000045
+#Desription: Fibonacci numbers: F(n) = F(n-1) + F(n-2) with F(0) = 0 and F(1) = 1.
+
+#[seq( nops(CompsMod(n,3,{1})),n=1..10)];
+#Output: [1, 1, 1, 2, 3, 4, 6, 9, 13, 19]
+#A number: A000930
+#Desription: Narayana's cows sequence: a(0) = a(1) = a(2) = 1; thereafter a(n) = a(n-1) + a(n-3).
+
+#[seq( nops(CompsMod(n,5,{1,4})),n=1..10)];
+#Output: [1, 1, 1, 2, 3, 5, 7, 10, 15, 23]
+#A number: A116975
+#Desription: Number of compositions of n into parts of sizes == 1 mod 5 or 4 mod 5.
+
+
+
+#2. A partition is odd if all its members are odd. Write a procedure OddParStupid(n) that looks at all the members of Par(n) and selects those that only have odd parts.
+
+OddParStupid:=proc(n):
+local P, p, S, check:
+S:={}:
+for P in Par(n) do
+check:=true:
+for p in P do
+if p mod 2 = 0 then check:=false; end if;
+end do;
+if check=true then S:=S union {P}; end if;
+end do;
+S;
+end proc:
+
+#OddParStupid(9);
+#Verified to be working
+
+
+
+#3. A partition is distinct if all its members are distinct. Write a procedure DistinctParStupid(n) that looks at all the members of Par(n) and selects those that have distinct parts.
+
+DistinctParStupid:=proc(n):
+local P, i, j, S, check:
+S:={}:
+for P in Par(n) do
+check:=true:
+for i from 1 to nops(P)-1 do
+for j from i+1 to nops(P) do
+if P[i]=P[j] then check:=false; end if;
+end do;
+end do;
+if check=true then S:=S union {P}; end if;
+end do;
+S;
+end proc:
+
+#DistinctParStupid(9);
+#Verified to be working
+
+
+
+#4. Verify that for n up to 15, nops(DistinctParStupid(n))=nops(OddParStupid(n))
+
+#[seq(nops(DistinctParStupid(n))-nops(OddParStupid(n)),n=1..15)];
+#Returns all zeros as desired implying nops(DistinctParStupid(n))=nops(OddParStupid(n))
+
+
+
+#5. [Optional Challenge (no peeking), 10 dollars] Prove that, for every positive integer n, the number of partitions of n into odd parts equals the number of partitions of n into distinct parts.
+
+#Start with a valid partition of n into distinct parts, if this is also odd we are done. WLOG assume it's not odd, i.e. it has an even element, call it x, I claim the process of replacing x in y,x,z with y,x/2,x/2,z and sorting
+#will eventually yield a unique valid odd partition. It is trivial that x/2^n must eventually yield an odd number, so this process clearly will eventually result in a valid odd partition. All that is left is to show this
+#construction process is injective. Let's suppose it is not, then their exist two valid partitions of n into distinct parts that eventually decompose by this halving process into the same odd partition. However note that if this
+#were true then inversely there must be a way to combine all pairs of equal values and to create different sums, but it's illogical for this reverse construction processes to give two different outputs when ran twice on the same
+#input since there is no randomness involved. For similar reasons combining all pairs of equal values in a odd partition must eventually give a partition of distinct parts, and each partition of distinct parts yielded must have been
+#constructed from a unique odd partition. QED
+
+#I will now show this construction process to be true by coding the bijection functions
+
+#We will need some supporting procs first
+
+#Returns true or false if list pi contains an even number
+ContainsEven:=proc(pi): local check, p: check:=false; for p in pi do if p mod 2 = 0 then check:=true; end if; end do; check; end proc:
+
+#List index of first even number
+FirstEven:=proc(pi): local i: for i from 1 to nops(pi) do if pi[i] mod 2 = 0 then return i; end if; end do; end proc:
+
+#Divide index by 2, add another copy, and sort by >
+SplitPart:=proc(pos,pi): local p: p:=[op(pi[1..pos-1]),(pi[pos])/2,(pi[pos])/2,op(pi[pos+1..nops(pi)])]: sort(p, `>`); end proc:
+
+#Boolean for if it has duplicate values, only has to check neighbors because all inputs are sorted by >
+HasTwins:=proc(pi): local check, i, j: check:=false: for i from 1 to nops(pi)-1 do for j from i+1 to nops(pi) do
+if pi[i]=pi[j] then check:=true; end if; end do; end do; check; end proc:
+
+#Gives index of first duplicate neighbor i.e. TwinFinder([3,1,1])=2, TwinFinder([45,45,45])=1
+TwinFinder:=proc(pi): local i, j: for i from 1 to nops(pi)-1 do for j from i+1 to nops(pi) do
+if pi[i]=pi[j] then return i; end if; end do; end do; end proc:
+
+#Merges two duplicate values by addition to form a new listed sorted > of length nops(pi)-1, index from TwinFinder
+MergeTwins:=proc(index,pi): local p: p:=[op(pi[1..index-1]),(pi[index]+pi[index+1]),op(pi[index+2..nops(pi)])]: sort(p, `>`); end proc:
+
+#Now for the bijection functions
+
+Distinct2Odd:=proc(S):
+local s, A:
+A:={}:
+for s in S do
+while ContainsEven(s) do
+s:=SplitPart(FirstEven(s),s):
+end do;
+A:=A union {s}:
+end do;
+A;
+end proc:
+
+Odd2Distinct:=proc(S):
+local s, A:
+A:={}:
+for s in S do
+while HasTwins(s) do
+s:=MergeTwins(TwinFinder(s),s):
+end do;
+A:=A union {s}:
+end do;
+A;
+end proc:
+
+#seq(evalb(Distinct2Odd(DistinctParStupid(n))=OddParStupid(n)),n=1..10);
+#The above verifies that Distinct2Odd is a mapping from DistinctParStupid to OddParStupid using the construction process described above.
+
+#seq(evalb(DistinctParStupid(n)=Odd2Distinct(OddParStupid(n))),n=1..10);
+#The above verifies that Odd2Distinct is a mapping from OddParStupid to DistinctParStupid using the construction process described above.
+
+#seq(evalb(Odd2Distinct(Distinct2Odd(DistinctParStupid(n)))=DistinctParStupid(n)),n=1..10);
+#This shows the two transformation functions are inverses of each other
+
+
+
+#6. [Optional Challenge, 5 dollars (modified 2/26/26)]
+#   Give a bijective proof that the number of compositions of n equals 2^n-1 by constructing a bijection between the set of compositions of n and 0-1 vectors of length n that start with 1.
+#   You should implement it in Maple, by coding both directions.
+
+#I claim you can build the set Comps(n) starting from the set Comps(n-1) using the following process, for each element in Comps(n-1) form two new elements in Comps(n), one by adding one to the last integer in the
+#list or adding a 1 onto the end to form a new longer list.
+
+#Aurora hypthesis trivial for n=1. Suppose the Aurora hypothesis hold's for 1 to n-1, consider n. It is clear the above construction process would generate two new elements for each previous element in Comps(n-1),
+#therefore since |Comps(n-1)| = 2^(n-2), |Comps(n)| =< 2 * 2^(n-2) = 2^(n-1). We can write equally as desired provided there is no overlap in our construction process, i.e. it's impossible for two inputs to create the same output
+#or one input to not create two outputs as desired. Trivially it must be the case that there is no overlap as one process only produces lists ending in 1 and the other only produces lists ending in >1, and it's impossible for two
+#different inputs to create the same output since they would have had to share all values and thus are not different. Similarily there must be no elements of Comps(n) that cannot be achieved through this construction process
+#as again one process produces all lists in Comps(n) ending in 1 and the other all lists in Comps(n) ending in >1. QED
+
+#It can also be observed the number of lists of length 1,2,3.. follow the pattern of pascal's triangle which also has the property that the sum of it's rows is 2^(n-1)
+
+#We can use this contruction process defined above to create a mapping that traces through the entire way that element was built starting from the seed of Comps(1) and going all the way to Comps(n).
+#We will define the history of how this string had to be constructed this way, start with a string of 1, if the first step to make this element was to add one to the last integer, add 1 to the end of the string,
+#if the first step was to add one to the end, add 0 to the end of the string. [1,1,1,1,1]=[5], [1,0,0,1,0]=[1,1,2,1]
+
+#Set of all n length binary vectors that begin with 1
+binvectorspace:=proc(n) option remember: local v, i, V: if n=1 then return {[1]}; end if; V:={}: for v in binvectorspace(n-1) do
+for i from 0 to 1 do V:=V union {[op(v),i]}: end do; end do; V; end proc:
+
+Bin2Comps:=proc(S):
+local s, i, A, a:
+A:={}:
+for s in S do
+a:=[1]:
+for i from 2 to nops(s) do
+if s[i]=1 then a:=[op(a[1..nops(a)-1]),(a[nops(a)]+1)];
+else a:=[op(a),1];
+end if;
+end do;
+A:=A union {a}:
+end do;
+A;
+end proc:
+
+Comps2Bin:=proc(S):
+local A, a, s, i, c:
+A:={}:
+for s in S do
+a:=[1]:
+for i from 1 to nops(s) do
+c:=s[i]:
+while c > 1 do a:=[op(a),1]: c:=c-1: end do;
+if i<>nops(s) then a:=[op(a),0]; end if;
+end do;
+A:=A union {a}:
+end do;
+A;
+end proc:
+
+#seq(evalb(Comps(n)=Bin2Comps(binvectorspace(n))),n=1..10);
+#The above verifies that Bin2Comps is a mapping from binvectorspace to Comps using the construction process described above.
+#seq(evalb(Comps2Bin(Comps(n))=binvectorspace(n)),n=1..10);
+#The above verifies that Comps2Bin is a mapping from Comps to binvectorspace using the construction process described above.
+#seq(evalb(Bin2Comps(Comps2Bin(Comps(n)))=Comps(n)),n=1..10);
+#This shows the two transformation functions are inverses of each other
+
+
+
+#7. [Optional Challenge, 6 dollars (modified 2/26/26)]
+#   Give a bijective proof that the number of compositions of n into odd parts equals fibonacci(n), by constructing a bijection between the set of compositions of n into odd parts and compositions
+#   into parts from {1,2} that start with 1. You should implement it in Maple, by coding both directions.
+
+#As I mentioned in class on 2/26, you could always append 1 to any odd composition of n-1 to form an odd composition of n and you could also add 2 to an element of an odd composition of n-2 and
+#still be left with an odd element, thus you have the seq |OddComps(n)|=|OddComps(n-1)|+|OddComps(n-2)| which is the fibonacci seq. QED
+
+#We can use the same construction process described in 6 but modified so we add 2 to the last integer and the role of 1 was mapped to 2 and the role of 0 mapped to 1 in the binary representation
+
+#Generates the subset of comps with only odd parts
+OddComps:=proc(n): local s, A: A:={}: for s in Comps(n) do if not ContainsEven(s) then A:=A union {s}; end if; end do; A; end proc:
+
+#Generates the compositions into parts from {1,2} that start with 1
+OneTwos:=proc(n): local s, A: A:={}: for s in CompsG(n,{1,2}) do if s[1]=1 then A:=A union {s}; end if; end do; A; end proc:
+
+OneTwos2OddComps:=proc(S):
+local s, i, A, a:
+A:={}:
+for s in S do
+a:=[1]:
+for i from 2 to nops(s) do
+if s[i]=2 then a:=[op(a[1..nops(a)-1]),(a[nops(a)]+2)];
+else a:=[op(a),1];
+end if;
+end do;
+A:=A union {a}:
+end do;
+A;
+end proc:
+
+OddComps2OneTwos:=proc(S):
+local A, a, s, i, c:
+A:={}:
+for s in S do
+a:=[1]:
+for i from 1 to nops(s) do
+c:=s[i]:
+while c > 1 do a:=[op(a),2]: c:=c-2: end do;
+if i<>nops(s) then a:=[op(a),1]; end if;
+end do;
+A:=A union {a}:
+end do;
+A;
+end proc:
+
+#seq(evalb(OddComps(n)=OneTwos2OddComps(OneTwos(n))),n=1..10);
+#The above verifies that OneTwos2OddComps is a mapping from OneTwos to OddComps using the construction process described above.
+#seq(evalb(OneTwos(n)=OddComps2OneTwos(OddComps(n))),n=1..10);
+#The above verifies that OddComps2OneTwos is a mapping from OddComps to OneTwos using the construction process described above.
+#seq(evalb(OddComps(n)=OneTwos2OddComps(OddComps2OneTwos(OddComps(n)))),n=1..10);
+#This shows the two transformation functions are inverses of each other
+
+
+

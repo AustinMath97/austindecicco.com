@@ -1,0 +1,319 @@
+#OK to post homework
+#Austin DeCicco, 1/27/26, Assignment 2
+
+Help:=proc():
+print("Bij(pi::list), InvBij(Pair::list), redu(L::list), SubSeqs3(L::list), Contain3(pi::list,sig::list), Contain3S(pi::list,S::set)"):
+end proc:
+
+#3. [Optional but a recommended challenge for novices, mandatory for experts]
+#   Part I: Write a procedure Bij(pi) that inputs a permutation pi of {1,...n}, where n:=nops(pi), and outputs the pair [i,pi'], 
+#   where i is the location of n, and pi' is the permutation of {1, ..., n-1} obtained from deleting n.
+#   For example Bij([3,1,4,6,2,5])=[4,[3,1,4,2,5]].
+
+#   Part II: Write a procedure InvBij(Pair) that inputs a pair Pair of the form [i,pi'],
+#   such that pi' is a permutation of {1,...,n-1} where n:=nops(pi')+1, and i is an integer between 1 and n inclusive,
+#   and outputs the permutation pi of {1, ...,n} obtained from pi' by inserting n right befire the i-th place (and if i=n, at the end.
+#   For example invBij([4,[3,1,4,2,5]]=[3,1,4,6,2,5].
+
+#Initializing procedure
+
+Bij:=proc(pi::list):
+local n, i, a, b, c::boolean, p::list, P::list:
+
+#Checking inputs pt.1
+
+if type(pi,list)=false then return("Bij(pi) invalid input: pi must be a list");
+end if;
+
+#Defining locals
+
+n:=nops(pi):
+
+#Checking inputs pt.2, while also finding i since we're here
+
+for a from 1 to n do
+c:=false:
+for b from 1 to n do
+if pi[b]=a then c:=true;
+if a=n then i:=b;
+end if;
+end if;
+end do;
+if c=false then return("Bij(pi) invalid input: pi must be a permutation of 1..n");
+end if;
+end do;
+
+#Forming p from pi-i
+
+p:=[op(1..i-1,pi),op(i+1..n,pi)]:
+
+#Forming P from p & i
+
+P:=[i,p]:
+
+#Wrapping-up
+
+P;
+end proc:
+
+#Initializing procedure
+
+InvBij:=proc(Pair::list):
+local a, b, c::boolean, n, m, i, pi::list, P::list:
+
+#Checking inputs & defining locals
+
+if type(Pair,list)=false then return("InvBij(Pair) invalid input: Pair must be a list");
+end if;
+m:=nops(Pair):
+if not m=2 then return("InvBij(Pair) invalid input: Pair must be of the form [i,pi::list] with 1 <= i <= nops(pi)+1 & pi a permutation 1..nops(pi)");
+end if;
+pi:=Pair[2]:
+if type(pi,list)=false then return("InvBij(Pair) invalid input: pi must be a list");
+end if;
+i:=Pair[1]:
+if type(i,integer)=false then return("InvBij(Pair) invalid input: i must be an integer");
+end if;
+n:=nops(pi)+1:
+if not 1 <= i then return("InvBij(Pair) invalid input: i not in range 1..nops(pi)+1");
+end if;
+if not i <= n then return("InvBij(Pair) invalid input: i not in range 1..nops(pi)+1");
+end if;
+for a from 1 to n-1 do
+c:=false:
+for b from 1 to n-1 do
+if pi[b]=a then c:=true;
+end if;
+end do;
+if c=false then return("InvBij(Pair) invalid input: pi must be a permutation 1..nops(pi)");
+end if;
+end do;
+
+#Forming P
+
+P:=[op(1..i-1,pi),n,op(i..n-1,pi)]:
+
+#Wrapping-up
+
+P;
+end proc:
+
+#4. [For everyone] Convince yourself that Bij and InvBij are inverses of each other and hence the sets permute(n) and {1, ...,n} x permute(n-1)
+#   are in bijection and hence we have a rigorous proof that if a(n) is the number of permutations of {1, ...,n} we have the recurrence
+#   a(n)=n*a(n-1).
+
+#Defining a quick procedure for experiment
+
+transform:=proc(Before::list):
+local transformed::list, After::list, permutation::list:
+After:=[]:
+for permutation in Before do
+transformed:=InvBij(Bij(permutation)):
+After:=[op(After),transformed]:
+end do;
+After;
+end proc:
+
+#Running experiment
+
+print("Question 4. Verfiying Bij and InvBij are inverse functions by brute force over the set of permute(7).");
+with(combinat):
+Before:=permute(7):
+After:=transform(Before):
+print("Calculations complete, now confirming inverse.");
+if Before=After then print("Confirmed.");
+else print("Failed.");
+end if;
+
+#5. [Optional for Novices, but try your best]
+#   Part I: Using procedure, Contain3(pi,sig), write a procedure Contain3S(pi,S) that inputs a set of patterns,
+#   all of length 3 and outputs true if and only of pi contains at least one of the patterns in S.
+#   Note that for any pattern sig of length 3, Contain3S(pi,{sig}) is the same as Contain3(pi,sig).
+#   For example Contain3([1,2,4,3],{[1,2,3],[3,2,1]}) is true but Contain3([4,3,2,1],{[1,2,3],[2,3,1]}) is false.
+
+#   Part II: Using Contain3S(pi,S) write a procedure AvoidPer(n,S): inputs a pos. integer n and a set of patterns of length 3, S,
+#   outputs the subset of permute(n) that avoids all the patterns in S.
+
+#   Part III: Conjecture an explicit formula for the number of permutations of {1, ...,n} avoding both the patterns 123 and 132,
+#   in other words, nops(AvoidPer(n,{[1,2,3],[1,3,2]})), by entering seq(AvoidPer(n,{[1,2,3],[1,3,2]}),n=1..8).
+
+#We must begin by copying over the whole procedure tree for Contain3().
+
+#Reworking redu() for my version of Maple and adding error handling.
+
+redu:=proc(L::list):
+local n, L1::list, T::table, i, a:
+if type(L,list)=false then return("redu(L) invalid input: L must be a list");
+end if;
+n:=nops(L):
+for a from 1 to n do
+if type(L[a],integer)=false then return("redu(L) invalid input: L must be a list of integers");
+end if;
+end do;
+L1:=sort(L):
+for i from 1 to n do
+T[L1[i]]:=i:
+end do;
+[seq(T[L[i]],i=1..n)];
+end proc:
+
+#Reworking SubSeqs3() for my version of Maple and adding error handling.
+
+SubSeqs3:=proc(L::list):
+local n, i1, i2, i3, S::set, a:
+if type(L,list)=false then return("SubSeqs3(L) invalid input: L must be a list");
+end if;
+n:=nops(L):
+for a from 1 to n do
+if type(L[a],integer)=false then return("SubSeqs3(L) invalid input: L must be a list of integers");
+end if;
+end do;
+S:={}:
+for i1 from 1 to n do
+for i2 from i1+1 to n do
+for i3 from i2+1 to n do
+S:=S union {[L[i1],L[i2],L[i3]]}:
+end do;
+end do;
+end do;
+S;
+end proc:
+
+#Reworking Contain3() for my version of Maple and adding error handling.
+
+Contain3:=proc(pi::list,sig::list):
+local n, S::set, s::list, a, b::list:
+if type(pi,list)=false then return("Contain3(pi,sig) invalid input: pi must be a list");
+end if;
+if type(sig,list)=false then return("Contain3(pi,sig) invalid input: sig must be a list");
+end if;
+n:=nops(pi):
+if nops(sig)<>3 then return("Contain3(pi,sig) invalid input: sig must be a list of length 3");
+end if;
+b:=[op(1..n,pi),op(1..3,sig)]:
+for a from 1 to n+3 do
+if type(b[a],integer)=false then return("SubSeqs3(L) invalid input: pi & sig must be lists of integers");
+end if;
+end do;
+S:=SubSeqs3(pi):
+for s in S do
+if redu(s)=sig then return(true);
+end if;
+end do;
+false;
+end proc:
+
+#Initializing procedure
+
+Contain3S:=proc(pi::list,S::set):
+local sig::list, c, a, n, b:
+
+#Checking inputs & defining locals
+
+if type(pi,list)=false then return("Contain3S(pi,S) invalid input: pi must be a list");
+end if;
+n:=nops(pi):
+for a from 1 to n do
+if type(pi[a],integer)=false then return("Contain3S(pi,S) invalid input: pi must be a list of integers");
+end if;
+end do;
+c:=false:
+for sig in S do
+if type(sig,list)=false then return("Contain3S(pi,S) invalid input: S must be a set of lists");
+end if;
+if nops(sig)<>3 then return("Contain3S(pi,S) invalid input: S must be a set of lists of length 3");
+end if;
+for b from 1 to 3 do
+if type(sig[b],integer)=false then return("Contain3S(pi,S) invalid input: S must be a set of lists of integers");
+end if;
+end do;
+
+#Checking if pi contains sig
+
+if Contain3(pi,sig)=true then c:=true;
+end if;
+end do;
+
+#Wrapping-up
+
+c;
+end proc:
+
+#Initializing procedure
+
+AvoidPer:=proc(n::integer,S::set):
+local A::list,pi::list,G::set:
+
+#Defining locals, we'll let Contain3S() handle the errors for potential bad S
+
+A:=permute(n):
+G:={}:
+
+#Checking against S and building G
+
+for pi in A do
+if not Contain3S(pi,S) then
+G:=G union {pi};
+end if;
+end do;
+
+#Wrapping-up
+
+G;
+end proc:
+
+#Running seq(nops(AvoidPer(n,{[1,2,3],[1,3,2]})),n=1..8)
+
+print("Running seq(nops(AvoidPer(n,{[1,2,3],[1,3,2]})),n=1..8), this will take a minute.");
+seq(nops(AvoidPer(n,{[1,2,3],[1,3,2]})),n=1..8);
+print("Observe the number of permutations of {1, ...,n} avoiding both the patterns 123 and 132, appears to follow 2^(n-1).");
+
+#6. [Optional challenge, for everyone, $10 to be divided, please no peeking] Prove that conjecture.
+
+#Gathering thoughts
+
+#Trivial for n=1,2,3. Suppose holds for n-1, consider n. We know permutations(n)=n*permutations(n-1), with n inserted to one of n possible positions
+#along elements of permutations(n-1), it's natural to speculate that logically, if the conjecture is true, that only 2 of these n positions can be valid placements
+#of n for each permutation in the set of permutations(n-1). However by looking at the experimental results and in particular looking at the jump from n=3 to n=4,
+#we can quickly rule out this speculation. Elements [2,1,3] & [2,3,1] only have 1 valid location for n, whereas element [3,1,2] has 2
+#and element [3,2,1] has all 4 locations for n as valid. Looking more generally this lexiographically backwards permutation seems to be a significant structure and
+#(at least experimentally) always has all n locations for n as valid. This is obvious with a little thought, as n is always bigger than any integer 1..n-1, thus it always
+#enters the pattern as '3', however no matter where you insert n, you can only get patterns 321, 231, and 213, since this permutation is lexiographically backwards, and
+#will never result in the forbidden patterns 123 and 132. Thus we know for every n we have at least n valid permutations which are formed by taking the
+#lexiographically backwards permutation of 1..n-1 and inserting n into every position. It may be useful from here to think about the allowed patterns, 321, 231, 213, & 312.
+#We should also note that it must be impossible to obtain a valid permutation of permutations(n) that is obtainable by an insertation of n into one of the n positions
+#of an element of permutations(n-1) where that element was not a valid permutation of permutations(n-1). Let's explore the jump from n=4 to n=5 for further possible patterns.
+#Descendents of [2,1,3] in n=4 are: [4,2,1,3]. Descendents of [2,3,1] in n=4 are: [4,2,3,1]. Descendents of [3,1,2] in n=4 are: [3,4,1,2],[4,3,1,2].
+#Descendents of [3,2,1] in n=4 are: [3,2,1,4],[3,2,4,1],[3,4,2,1],[4,3,2,1].
+#Descendents of [4,2,1,3] in n=5 are: [4,5,2,1,3],[5,4,2,1,3]. Descendents of [4,2,3,1] in n=5 are: [4,5,2,3,1],[5,4,2,3,1].
+#Descendents of [3,4,1,2] in n=5 are: [5,3,4,1,2]. Descendents of [4,3,1,2] in n=5 are: [4,3,5,1,2],[4,5,3,1,2],[5,4,3,1,2].
+#Descendents of [3,2,1,4] in n=5 are: [5,3,2,1,4]. Descendents of [3,2,4,1] in n=5 are: [5,3,2,4,1]. Descendents of [3,4,2,1] in n=5 are: [5,3,4,2,1].
+#Descendents of [4,3,2,1] in n=5 are: [4,3,2,1,5],[4,3,2,5,1],[4,3,5,2,1],[4,5,3,2,1],[5,4,3,2,1].
+#We note every valid element of permutations(n-1) has a valid permutation in permutations(n) obtained by adding n into the first position. This makes sense since again n
+#will always enter as 3 into the pattern and both 312 and 321 are valid. Thus by induction, we obtain the new lower bound of n-1+2^(n-2).
+#A possibly useful pattern to prove (*) would be why valid permutations always seem to begin with n or n-1. This of course would have the corrollary that any seed permutation
+#that begins with n-2 has only one valid permutation in permutations(n), and furthermore that seed permutations that begin with less than n-2 are not possible.
+#Let's attempt now to prove (*), if a valid in permutations(n) began with n-2, than there exists a 12 pattern with the n-1 at position i, i > 1.
+#If we can the position we wish to place n in the seed permutation N, than we have N<=i to avoid a 123 pattern, but we also have that N cannot be between 1 and i,
+#else we have 132, thus N must be 1. A similar argument holds for all values < n-2. We can use (*) to arrive at an upper bound of 2*(n-1)!. But wait! We could do even
+#better, if the valid n permutation starts with n, we know it must be built from a valid element of permutations(n-1), the valid subset has size 2^(n-2) by induction and as proved
+#before each element contributes only once the subset of valid elements of permutations(n) that begin with n. New upper bound (n-1)!+2^(n-2).
+#If the valid n permutation starts with n-1, then the valid options for inserting n in the remaining space (fixing all other numbers) are the same in number as the valid
+#options for inserting n-1 in the version of this permutation absent n and n-1. This is trivial as n and n-1 are both serving the role of 3 to all other numbers,
+#when the other is absent. We can use this new fact to show that the valid elements of permutations(n) with n-1 in first position are capped at 2^(n-2).
+#We have arrived so far at an upper bound on valid permutations(n) of 2^(n-1) and lower bound of n-1+2^(n-2). We must tighten the lower bound to prove the conjecture.
+#Again as n and n-1 are both serving the role of 3 to all other numbers, when the other is absent. There must be an equal number of valid permutations(n) that begin with n and n-1.
+#Since we showed that we can always construct a valid permutation of n by putting n in front of a valid permutation of n-1, we arrive at the new lower bound of 2^(n-1).
+#Thus we have messily proved the conjecture. QED
+
+#Concise Proof
+
+#Trivial for n=1,2,3. Suppose holds for n-1, consider n. We note that it must be impossible to obtain a valid permutation of n that is obtainable by an insertation of n into one of the n positions
+#of an element of the set permutations(n-1) where that element was not a valid permutation of n-1. If a valid 'seed' permutation of n-1 began with n-2, than there exists a 12 pattern with the n-1 at position i, i > 1.
+#If we call the position we wish to place n in the seed permutation of n-1, N, than we have N<=i to avoid a 123 pattern, but we also have that N cannot be greater than 1
+#and less than or equal to i, else we have 132, thus N must be 1. A similar argument holds for all values < n-2. Thus any valid permutation of n begins with n or n-1.
+#If the valid permutation of n starts with n, we know it must be built from a valid element of permutations(n-1), the valid subset has size 2^(n-2) by induction and trivially each element contributes at most once
+#to the subset of valid elements of permutations(n) that begin with n. As n and n-1 are both serving the role of 3 to all other numbers when the other is absent, there must be an equal number of valid permutations
+#of n that begin with n and n-1. The interaction between n-1 as first element and n as a latter element is irrelevent as both 213 and 231 are valid patterns, and similarily for the reverse.
+#Thus we arrive at an upper bound of valid permutations of n of 2^(n-1). Since patterns 312 and 321 are allowed and n plays the role of 3, adding n to the front of any valid permutation of n-1 is always valid.
+#Thus by induction we arrive at a lower bound of valid permutations of n of 2^(n-1). The bounds are equal thus there are 2^(n-1) valid permuations of n. QED

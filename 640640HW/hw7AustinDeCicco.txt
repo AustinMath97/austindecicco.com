@@ -1,0 +1,228 @@
+#OK to post homework
+#Austin DeCicco, 2/14/26, Assignment 7
+
+Help:=proc():
+print("FP(pi), Der(n), d(n), ExtractCycle(pi,i), CycDec(pi), IncSeqs1(n,k,a), IncSeqs(n,k), Contain1(pi,sig), Contain(pi,S), AvoidPer(n,S), a(n), b(n), redu(L), 
+SubSeqs3(L), Contain3(pi,sig), AvoidPer1(n,sig), Contain3S(pi,S), AvoidPer3(n,S), maj(pi), inv(pi), LtoR(pi), RF(x,n), WtE(S,f,x), Games(S,a,b), NuGames(S,a,b), 
+CFC(C), CycToPer(C), JG1(N),  JG2(N), RF2(a,n), HowManyDigits(f,N)"):
+end proc:
+
+#BEGIN REFORMATTED C3
+############################################################################################################################################################
+
+#FP(pi): The number of fixed points of per. pi
+
+FP:=proc(pi): local n, i, co: n:=nops(pi): co:=0: for i from 1 to n do if pi[i]=i then co:=co+1; end if; end do; co; end proc:
+
+# Der(n): The set of derangements (i.e. permutations w/o fixed points) of {1, ..., n}
+
+Der := proc(n): local S,pi,DE: S:=permute(n): DE:={}: for pi in S do if FP(pi)=0 then  DE:=DE union {pi}; end if; end do; DE; end proc:
+
+#d(n):=|Der(n)|
+
+d:=proc(n) option remember: if n=1 then 0; else n*d(n-1)+(-1)^n; end if; end proc:
+
+#ExtractCycle(pi,i): The cycle corresponding to the member i of the permutation pi For example ExtractCycle([2,1,4,3],1)=[1,2]
+
+ExtractCycle:=proc(pi,i): local C, ng: C:=[i]: ng:=pi[i]: while ng<>i do C:=[op(C),ng]: ng:=pi[ng]: end do; C; end proc:
+
+#CycDec(pi): The full cyclic decomposition of pi
+
+CycDec:=proc(pi): local n, i, StillToDo, S, C, ng: n:=nops(pi): StillToDo:={seq(i,i=1..n)}: S:={}: while StillToDo<>{} do ng:=StillToDo[1]:
+C:=ExtractCycle(pi,ng): S:=S union {C}: StillToDo:=StillToDo minus {op(C)}: end do; S; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C3
+
+#BEGIN REFORMATTED C4
+############################################################################################################################################################
+
+#IncSeqs1(n,k,a): The set of increasing sequences of length k of integers that ends with a
+
+IncSeqs1:=proc(n,k,a) option remember: local S, b, S1, s1: if not type(n,integer) and type(k,integer) and k<=n and k>=1 and a<=n and n>=1 then return(FAIL); end if;
+if k=1 then return({[a]}); end if; S:={}: for b from k-1 to a-1 do S1:=IncSeqs1(n,k-1,b): S:=S union {seq([op(s1),a],s1 in S1)}: end do; S; end proc:
+
+#IncSeqs(n,k): The set of increasing sequences of length k from the integers 1 to n
+
+IncSeqs:=proc(n,k): local a: {seq(op(IncSeqs1(n,k,a)),a=k..n)}; end proc:
+
+#Contain1(pi,sig): Does the permutation pi contain the pattern sig?
+
+Contain1:=proc(pi,sig): local n, k, S, s, i1: n:=nops(pi): k:=nops(sig): S:=IncSeqs(n,k): for s in S do if redu([seq(pi[s[i1]],i1=1..k)])=sig then
+return(true); end if; end do; false; end proc:
+
+#Contain(pi,S): does pi contain at least one of the patterns in S?
+
+Contain:=proc(pi,S): local sig: for sig in S do if Contain1(pi,sig) then return true; end if; end do; false; end proc:
+
+#AvoidPer(n,S): the permutations of length n that avoid the patterns in S1
+
+AvoidPer:=proc(n,S) option remember: local G, G1, i, pi1, pi: if n=0 then return({[]}); end if; G:={}: G1:=AvoidPer(n-1,S): for i from 1 to n do
+for pi1 in G1 do pi:=[op(1..i-1,pi1),n,op(i..n-1,pi1)]: if not Contain(pi,S) then G:=G union {pi}; end if; end do; end do; G; end proc:
+
+#This is still open: Why is it that it is all integers up to n=17
+
+a:=proc(n) option remember: local i: if n=1 then 2; else add(a(i)^2,i=1..n-1)/(n-1); end if; end proc:
+
+b:=proc(n) option remember: if n>=1 and n<=4 then 1; else (b(n-1)*b(n-3)+b(n-2)^2)/b(n-4); end if; end proc:
+
+#redu(L): inputs a list of distinct numbers and outputs its reduction according to their order For example redu([5,9,1]): [2,3,1]
+
+redu:=proc(L): local n, L1, T, i: n:=nops(L): L1:=sort(L): for i from 1 to n do T[L1[i]]:=i: end do; [seq(T[L[i]],i=1..n)]; end proc:
+
+#SubSeqs3(L): The set of subsequences of the list L of length 3. For example SubSeqs3([1,6,2,4])={[1,6,2],[1,6,4],[1,2,4],[6,2,4]}
+
+SubSeqs3:=proc(L): local n, i1, i2, i3, S: n:=nops(L): S:={}: for i1 from 1 to n do for i2 from i1+1 to n do for i3 from i2+1 to n do
+S:=S union {[L[i1],L[i2],L[i3]]}: end do; end do; end do; S; end proc:
+
+#Contain3(pi,sig): does the permutation pi contain the pattern sig? Contain3([2,1,3,4],[1,2,3]) returns true Contain3([4,3,2,1],[1,2,3]) returns false
+
+Contain3:=proc(pi,sig): local n, S, s: n:=nops(pi): if nops(sig)<>3 then RETURN(FAIL); end if; S:=SubSeqs3(pi): for s in S do if redu(s)=sig then
+return(true); end if; end do; false; end proc:
+
+#AvoidPer1(n,sig): inputs a pos. integer n and a pattern of length 3 outputs the subset of permute(n) that avoid the parttern sig
+
+AvoidPer1:=proc(n,sig) local A,pi,G: A:=permute(n): G:={}: for pi in A do if not Contain3(pi,sig) then G:=G union {pi}; end if; end do; G; end proc:
+
+Contain3S:=proc(pi,S): local sig: for sig in S do if Contain3(pi,sig) then return true; end if; end do; false; end proc:
+
+AvoidPer3:=proc(n,S): local A, pi: A:={}: for pi in permute(n) do if not Contain3S(pi,S) then A:=A union {pi}; end if; end do; A; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C4
+
+#BEGIN REFORMATTED C5
+############################################################################################################################################################
+
+with(combinat):
+
+#maj(pi): The major index : The sum of the places where pi[i]>pi[i+1]
+
+maj:=proc(pi): local n, i, co: co:=0: n:=nops(pi): for i from 1 to n-1 do if pi[i]>pi[i+1] then co:=co+i; end if; end do; co; end proc:
+
+#inv(pi): The number of inversions of the permutation pi. For example inv([1,2,3])=0, inv([3,2,1])=3  
+
+inv:=proc(pi): local n, i, j, co: n:=nops(pi): co:=0: for i from 1 to n do for j from i+1 to n do if pi[i]>pi[j] then co:=co+1; end if; end do; end do; co; end proc:
+
+#LtoR(pi): The list places that are larger than anything to the left pi=[2,1,4,3]
+
+LtoR:=proc(pi): local n, L, i, ma: n:=nops(pi): L:=[1]: ma:=pi[1]: for i from 2 to n do if pi[i]>ma then L:=[op(L), i ]; ma:=pi[i]; end if; end do; L; end proc:
+
+#x*(x+1)*...*(x+n-1)
+
+RF:=proc(x,n): local i: mul(x+i,i=0..n-1); end proc:
+
+#WtE(S,f,x): add(x^f(s), s in S)
+
+WtE:=proc(S,f,x): local s: add(x^(f(s)), s in S); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C5
+
+#BEGIN REFORMATTED C6
+############################################################################################################################################################
+
+#Games(S,a,b): Inputs a finite set of POSITIVE integers and pos. integers and outputs the set of game histories, where Home team scored a points
+#and the Visiting team scored b points where the "atomic" scoring events belong to S. In Soccer: S={1}; Basketball ={1,2,3}; American football={3,6,7,8}
+
+Games:=proc(S,a,b) option remember: local G, s, G1, g1: if a<0 or b<0 then RETURN({}); end if; if a=0 and b=0 then RETURN({[[0,0]]}); end if; G:={}:
+for s in S do G1:=Games(S,a-s,b): G:=G union {seq([op(g1),[a,b]],g1 in G1)}: G1:=Games(S,a,b-s): G:=G union {seq([op(g1),[a,b]],g1 in G1)}: end do; G; end proc:
+
+#NuGames(S,a,b): Inputs a finite set of POSITIVE integers and pos. integers and outputs the NUMBER of game histories, where Home team scored a points
+#and the Visiting team scored b points where the "atomic" scoring events belong to S. In Soccer: S={1}; Basketball ={1,2,3}; American football={3,6,7,8}
+
+NuGames:=proc(S,a,b) option remember: local G, s, G1, g1: if a<0 or b<0 then RETURN(0); end if; if a=0 and b=0 then RETURN(1); end if;
+add(NuGames(S,a-s,b),s in S)+add(NuGames(S,a,b-s),s in S); end proc:
+
+#CFC(C): inputs a list of numbers coming from a cycle and outputs the equivalent cycle where the largest entry is the first. CFC([4,6,1])= [6,4,1]
+
+CFC:=proc(C): local k: k:=max[index](C): [op(k..nops(C),C),op(1..k-1,C)]; end proc:
+
+#CycToPer(C): The reverse of CycDec(pi). Given a permutation in cycle structure, outputs it in 1-line notation. For example CycToPer({[1,2],[3,4]})=[2,1,4,3]
+
+CycToPer:=proc(C): local n,i,j,T: n:=add(nops(C[i]),i=1..nops(C)): for i from 1 to nops(C) do for j from 1 to nops(C[i])-1 do T[C[i][j]]:=C[i][j+1]:
+end do; T[C[i][-1]]:=C[i][1]: end do; [seq(T[i],i=1..n)]; end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C6
+
+#BEGIN REFORMATTED C7
+############################################################################################################################################################
+
+#RF2(a,n): The rising factorial (aka Pochammer symbol) a(a+1)...(a+n-1). Note that RF(1,n)=n!
+
+RF2:=proc(a,n): local i: mul(a+i,i=0..n-1); end proc:
+
+#Inputs a pre-coded procedure for computing Pi via an infinite series, the number of digits that gree with Pi if you truncate it after the term n=N. For example
+#HowManyDigits(JG1,40); should return 123, meaning that if you truncate the series after 40 terms it would agree with Pi to 123 digits.
+
+HowManyDigits:=proc(f,N): Digits:=10000: -trunc(log[10](abs(evalf(f(N)-Pi)))); end proc:
+
+#JG1(N): The first N terms in the Guillera formula in his homepage using Ramanujan-style ... notation
+
+JG1:=proc(N): local i, n, a: a:=add((mul(2*i-1,i=1..n)/mul(2*i,i=1..n))^5*(13+20*n*(50+41*(n-1)))*(-1/2^10)^n,n=0..N): sqrt(128/a); end proc:
+
+#The first formula in page 6 of Jesus Guillera's thesis http://anamat.unizar.es/jguillera/pdf-files/Guillera-thesis2007.pdf
+
+JG2:=proc(N) local n, a: a:=add(RF2(1/2,n)*RF2(1/3,n)*RF2(2/3,n)/n!^3*(2/27)^n*(15*n+2),n=0..N): (27/(4*a)); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C7
+
+#1. Read, understand, and experiment with the procedures done after class in C7.txt , if you use the formula in Guillera's homepage, coded in JG1, how many terms
+#   (i.e. in what place do you need to truncate the series) to compute Pi to 100 decimal digits after the decimal point?
+
+#HowManyDigits(JG1,33);
+#The above outputs 102, 1 more than the desired 101.
+
+#2. Browse Jesus Guillera's thesis, his papers, and the formulas in Professor Zudilin's talk, pick five series that look promising, hard-code them (similar to JG2, using RF),
+#   call them JGyourInitialsX (X=1,2,3,4,5), e.g. JGlm1(N), JGlm2(N), etc., and find the number of digits that agree with Pi if you use 101 terms in the series (i.e. you stop at n=100)
+#   [The person to get the greatest number of digits will get a prize of 5 dollars]
+
+JGad1:=proc(N):
+local i, n, a:
+a:=add((((42*n)+5)/((2^(6*n))*(RF2(1,n)^3)))*(RF2(0.5,n)^3),n=0..N):
+16/a;
+end proc:
+
+JGad2:=proc(N):
+local i, n, a:
+a:=add(((mul(2*i-1,i=1..n)/mul(2*i,i=1..n))^5)*((20*(n^2))+(8*n)+1)*((-1/4)^n),n=0..N):
+sqrt(8/a);
+end proc:
+
+JGad3:=proc(N):
+local i, n, a:
+a:=add((RF2(0.5,n)^3)*((120*(n^2))+(34*n)+3)*((1/16)^n)*((RF2(0.25,n)*RF2(0.75,n))/(RF2(1,n)^5)),n=0..N):
+sqrt(32/a);
+end proc:
+
+JGad4:=proc(N):
+local i, n, a:
+a:=add(((252*(n^2))+(63*n)+5)*((-1/48)^n)*((RF2(1/3,n)*RF2(2/3,n)*RF2(0.5,n)*RF2(0.25,n)*RF2(0.75,n))/(RF2(1,n)^5)),n=0..N):
+sqrt(48/a);
+end proc:
+
+JGad5:=proc(N):
+local i, n, a:
+a:=add(((1920*(n^2))+(304*n)+15)*((1/2401)^n)*((RF2(1/8,n)*RF2(3/8,n)*RF2(0.5,n)*RF2(5/8,n)*RF2(7/8,n))/(RF2(1,n)^5)),n=0..N):
+sqrt(56*sqrt(7)/a);
+end proc:
+
+HowManyDigits(JGad1,100);
+HowManyDigits(JGad2,100);
+HowManyDigits(JGad3,100);
+HowManyDigits(JGad4,100);
+HowManyDigits(JGad5,100);
+
+#JGad1, 182
+#JGad2, 61
+#JGad3, 122
+#JGad4, 170
+#JGad5, 341
+
+#Best: JGad5, 341
+
+
+
+

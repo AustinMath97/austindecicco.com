@@ -1,0 +1,72 @@
+#OK to post homework
+#Austin DeCicco, 2/22/26, Assignment 9
+
+#BEGIN REFORMATTED C9
+############################################################################################################################################################
+
+with(combinat):
+
+#RandL(n,k): A random list of subsets of {1, ...,n} of length k
+RandL:=proc(n,k): local i: [seq(randcomb(n, rand(2..n-2)()), i=1..k)]; end proc:
+
+#PIEd(n,L): What the PIE computes, done directly
+PIEd:=proc(n,L): local i: nops({seq(i,i=1..n)} minus {seq(op(L[i]),i=1..nops(L))}); end proc:
+
+IntL:=proc(L): local i: `intersect`(seq(L[i],i=1..nops(L))); end proc:
+
+PIE:=proc(n,L): local k, cu, S, s: cu:=n: for k from 1 to nops(L) do S:=choose(L,k):
+cu:=cu+(-1)^k*add(nops(IntL(s)), s in S): end do; cu; end proc:
+
+#PIEg(n,L,t):  The weight-enumerator of the members of the universal set according to t^#NumberOfProperties
+PIEg:=proc(n,L,t): local k, cu, S, s: cu:=n: for k from 1 to nops(L) do S:=choose(L,k):
+cu:=cu+(t-1)^k*add(nops(IntL(s)), s in S): end do; expand(cu); end proc:
+
+#dn(n): The number of derangements of {1, ..., n}
+dn:=proc(n): local k: n!*add((-1)^k/k!,k=0..n); end proc:
+
+#dnt(n,t): The weight-enumerator of permutations of {1, ..., n} according to the number of fixed
+dnt:=proc(n,t): local k: expand(n!*add((t-1)^k/k!,k=0..n)); end proc:
+
+############################################################################################################################################################
+#END REFORMATTED C9
+
+#1. Write a procedure NumberOfProperties(n,L,i) that inputs a positive integer n, a list of subsets, L, of {1, ..., n}, and a member of {1, ...,n}
+#   and outputs the number of sets in L such that i belongs to them. For example NumberOfProperties(4,[{1,3},{2,4},{3,4}],1)=1,
+#   NumberOfProperties(4,[{1,3},{2,4},{3,4}],2)=1, NumberOfProperties(4,[{1,3},{2,4},{3,4}],3)=2, NumberOfProperties(4,[{1,3},{2,4},{3,4}],4)=2
+
+NumberOfProperties:=proc(n,L,i):
+local l, j, count:
+if i>n then return "i out of bounds"; end if;
+count:=0:
+for l in L do
+for j in l do
+if j>n then return "L out of bounds"; end if;
+if j=i then
+count:=count+1:
+end if;
+end do;
+end do;
+count;
+end proc:
+
+NumberOfProperties(4,[{1,3},{2,4},{3,4}],4);
+#Above returns 2 as desired
+
+#2. Using the above, write a procedure PIEgD(n,L,t) that outputs the sum of t^NumberOfProperties(n,L,i) over all i from 1 to n
+
+PIEgD:=proc(n,L,t):
+local i:
+add(t^NumberOfProperties(n,L,i),i=1..n);
+end proc:
+
+PIEgD(4,[{1,3},{2,4},{3,4}],t);
+#Above returns 2t+2t^2 as desired
+
+#3. Test that PIEg(n,L,t)=PIEgD(n,L,t) by doing 5 times
+L:=RandL(1000,4): evalb(PIEg(1000,L,t)=PIEgD(1000,L,t));
+L:=RandL(1000,4): evalb(PIEg(1000,L,t)=PIEgD(1000,L,t));
+L:=RandL(1000,4): evalb(PIEg(1000,L,t)=PIEgD(1000,L,t));
+L:=RandL(1000,4): evalb(PIEg(1000,L,t)=PIEgD(1000,L,t));
+L:=RandL(1000,4): evalb(PIEg(1000,L,t)=PIEgD(1000,L,t));
+#All true as desired
+
