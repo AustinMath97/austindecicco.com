@@ -199,20 +199,30 @@ h5.course-title.section-label {
 
 .profile-header {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
+  gap: 24px;
 }
 
 .profile-photo {
-  width: 200px;
+  width: 140px;
   height: auto;
-  margin-bottom: 15px;
   display: block;
+  flex: none;
 }
 
 .profile-header h1 {
-  text-align: center;
+  text-align: left;
   margin: 0;
+}
+
+.profile-intro {
+  min-width: 0;
+}
+
+.profile-intro p {
+  margin: 4px 0 0 0;
+  color: var(--color-text-muted);
 }
 
 
@@ -262,11 +272,29 @@ h5.course-title.section-label {
   min-width: 180px;
 }
 
-.inline-icon {
+
+/* ================================
+   INDEX PAGE — CONTACT ROW
+   Used only on index.html
+================================ */
+
+.contact-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+}
+
+.contact-row a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.contact-icon {
   width: 16px;
   height: 16px;
-  vertical-align: middle;
-  margin-right: 5px;
+  flex: none;
 }
 
 
@@ -415,6 +443,18 @@ h5.course-title.section-label {
    Applies to all pages
 ================================ */
 
+@media (max-width: 600px) {
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .profile-header h1 {
+    text-align: center;
+  }
+}
+
 @media (max-width: 480px) {
   body {
     padding: 0 10px;
@@ -423,6 +463,5 @@ h5.course-title.section-label {
 
   .profile-photo {
     width: 120px;
-    margin-bottom: 10px;
   }
 }
