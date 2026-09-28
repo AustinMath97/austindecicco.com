@@ -252,7 +252,7 @@ h5.course-title.section-label {
   transform: translateY(-1px);
 }
 
-.project a {
+.project > a {
   font-weight: bold;
   font-size: 1.05em;
 }

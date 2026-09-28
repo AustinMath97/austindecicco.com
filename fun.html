@@ -47,25 +47,18 @@
           <p><strong>Notes:</strong></p>
 
           <ul>
-            <li>Either form works: <code>Search(1,1,2,3,5,8)</code> or
-              <code>Search([1,1,2,3,5,8])</code>.</li>
+            <li>Takes six or more terms, as a sequence or a list:
+              <code>Search(1,1,2,3,5,8)</code> and <code>Search([1,1,2,3,5,8])</code> both give
+              <code>45</code>. More terms narrow the search.</li>
 
-            <li>Six terms is the minimum. More terms narrow the search.</li>
+            <li>The answer is the A-number without its leading zeros, so pad it back to six digits:
+              <code>45</code> is <a href="https://oeis.org/A000045" target="_blank"
+              rel="noopener noreferrer">A000045</a>, the Fibonacci numbers. A sequence OEIS does not
+              have comes back as <code>-1</code>.</li>
 
-            <li>The answer is the A-number with its leading zeros dropped, so pad it back to six
-              digits: <code>45</code> is <a href="https://oeis.org/A000045" target="_blank"
-              rel="noopener noreferrer">A000045</a>, the Fibonacci numbers. Likewise
-              <code>Search(2,3,5,7,11,13)</code> gives <code>40</code> for
-              <a href="https://oeis.org/A000040" target="_blank" rel="noopener noreferrer">A000040</a>,
-              the primes.</li>
-
-            <li>You get <code>-1</code> when OEIS has nothing matching the sequence.</li>
-
-            <li>The search runs over the internet, so you need to be online.</li>
-
-            <li>Repeating a search in the same Maple session answers instantly, because the answer
-              is remembered. That applies to <code>-1</code> as well, so if a search came back
-              <code>-1</code> while you were offline, restart Maple before trying it again.</li>
+            <li>Needs an internet connection. Within one Maple session a repeated search answers
+              from memory, <code>-1</code> included, so restart Maple before retrying a search that
+              failed while you were offline.</li>
 
             <li>Adapted from <a href="https://github.com/dskoog/Maple-OEIS" target="_blank"
               rel="noopener noreferrer">Daniel Skoog's Maple-OEIS</a>, for Doron Zeilberger's
