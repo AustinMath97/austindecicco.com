@@ -44,16 +44,53 @@
             to input a sequence of numbers and retrieve possible OEIS matches automatically.
           </p>
 
+          <p><strong>Usage:</strong></p>
+
+          <ul>
+            <li>Open the file in Maple and run all of it, then call
+              <code>Search</code> with your sequence: <code>Search(1,1,2,3,5,8)</code> gives
+              <code>45</code>. Run the whole file, not just the <code>Search</code> procedure
+              &mdash; the OEIS web address sits on its own line above it.</li>
+
+            <li>Enter the terms the way you would write them out, separated by commas.
+              <code>Search(1,1,2,3,5,8)</code> works; <code>Search([1,1,2,3,5,8])</code> does not,
+              because the square brackets make it a list rather than a sequence.</li>
+
+            <li>Six terms is the minimum. More terms narrow the search.</li>
+
+            <li>The answer is the A-number with its leading zeros dropped, so pad it back to six
+              digits: <code>45</code> is <a href="https://oeis.org/A000045" target="_blank"
+              rel="noopener noreferrer">A000045</a>, the Fibonacci numbers. Likewise
+              <code>Search(2,3,5,7,11,13)</code> gives <code>40</code> for
+              <a href="https://oeis.org/A000040" target="_blank" rel="noopener noreferrer">A000040</a>,
+              the primes.</li>
+
+            <li>You get <code>-1</code> when OEIS has nothing matching the sequence.</li>
+          </ul>
+
+          <p><strong>Errors:</strong></p>
+
+          <ul>
+            <li><code>6 or more integers required; received ...</code> &mdash; either fewer than six
+              terms, or something that is not a whole number, reached the function. The message
+              lists what it received, which is usually enough to spot the problem. A sequence typed
+              in square brackets lands here too.</li>
+
+            <li><code>curl returned no data ... Exit code: 6</code> &mdash; the search never reached
+              OEIS. Check your internet connection and try again. <code>curl</code> is the small
+              program Maple hands the request to; it ships with current versions of Windows and
+              macOS, so this is almost always a connection problem rather than a missing
+              program.</li>
+          </ul>
+
           <p><strong>Notes:</strong></p>
 
           <ul>
-            <li>Input must be sequences, not lists (see comments inside the file).</li>
+            <li>The search runs over the internet, so you need to be online.</li>
 
-            <li>
-              If you receive the error:<br>
-              <code>Error, (in URL:-Get) protocol "https" not supported or disabled in libcurl</code><br>
-              update Maple to a newer version.
-            </li>
+            <li>Repeating a search in the same Maple session answers instantly, because the answer
+              is remembered. That applies to <code>-1</code> as well, so if a search came back
+              <code>-1</code> while you were offline, restart Maple before trying it again.</li>
 
             <li>Adapted from <a href="https://github.com/dskoog/Maple-OEIS" target="_blank"
               rel="noopener noreferrer">Daniel Skoog's Maple-OEIS</a>, for Doron Zeilberger's
@@ -61,7 +98,7 @@
 
             <li>Modified with help from Claude (AI).</li>
 
-            <li><strong>Verified Working:</strong> 3/9/2026</li>
+            <li><strong>Verified Working:</strong> 9/28/2026</li>
           </ul>
 
         </div>
