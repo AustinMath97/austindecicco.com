@@ -225,6 +225,10 @@ h5.course-title.section-label {
   color: var(--color-text-muted);
 }
 
+.profile-intro .contact-row {
+  margin-top: 8px;
+}
+
 
 /* ================================
    INDEX PAGE — LINK LIST
@@ -452,6 +456,10 @@ h5.course-title.section-label {
 
   .profile-header h1 {
     text-align: center;
+  }
+
+  .contact-row {
+    justify-content: center;
   }
 }
 
