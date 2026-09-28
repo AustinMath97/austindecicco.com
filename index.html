@@ -24,8 +24,8 @@
   <meta property="og:image:alt" content="Austin DeCicco">
 
   <!-- Important for iOS previews -->
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
+  <meta property="og:image:width" content="200">
+  <meta property="og:image:height" content="200">
 
   <!-- Twitter (used as fallback by some apps) -->
   <meta name="twitter:card" content="summary_large_image">
@@ -39,6 +39,8 @@
   <link rel="apple-touch-icon" href="https://austindecicco.com/favicon.jpg">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <link rel="canonical" href="https://austindecicco.com/">
 
   <!-- Favicon -->
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -56,41 +58,63 @@
 
   <main>
 
-    <div style="display: flex; gap: 40px; flex-wrap: wrap;">
-      <div style="flex: 1; min-width: 180px;">
-        <h2>Education and Experience in:</h2>
-        <p>Mathematics      - Current M.S. student / B.A. Rutgers.<br>
-	   Economics        - B.S. University of Maryland.<br>
-	   Statistics       - Integral to all degrees.<br>
-	   Finance          - Relevant coursework.<br>
-	   Computer Science - Self taught.</p>
+    <div class="intro-columns">
+      <div>
+        <h2>Education:</h2>
+        <p><strong>M.S. Mathematics</strong>, Rutgers &mdash; expected May 2027, GPA 4.0<br>
+           <strong>B.A. Mathematics</strong>, Rutgers &mdash; 2023, GPA 3.96, Summa Cum Laude<br>
+           <strong>B.S. Economics</strong>, Maryland &mdash; 2022, minor in Statistics</p>
       </div>
-      <div style="flex: 1; min-width: 180px;">
-        <h2>Potential Research Interests:</h2>
-        <p>Stochastic Processes<br>
-	   Predictive Modeling<br>
-	   Combinatorics<br>
-	   Data Science<br>
-	   Machine Learning</p>
+      <div>
+        <h2>Research Interests:</h2>
+        <p>Quantitative Finance<br>
+           Stochastic Investment Models<br>
+           Regime-Switching Models<br>
+           Reinforcement Learning<br>
+           Econometrics<br>
+           Combinatorics</p>
       </div>
     </div>
 
+    <h2>Research:</h2>
+    <p><strong>Liquidity-Dependent Retrace of Price Spikes under Cross-Venue Arbitrage</strong><br>
+       Independent research supervised by Prof. Larsen, Rutgers &mdash; Fall 2026. A model of how far
+       a centralized-exchange price spike retraces once arbitrage with a constant-product AMM pool
+       closes the gap, as a function of pool liquidity, slippage-adjusted execution rate and
+       order-book state.</p>
+
+    <p><strong>Statistical Properties of Permutations and SYT Reflected by the
+       Robinson&ndash;Schensted Algorithm</strong><br>
+       With Jike Liu, Experimental Mathematics &mdash; Spring 2026. Row and column sum vector
+       uniqueness experiments on standard Young tableaux turned up <strong>two integer sequences
+       not previously in the OEIS</strong>, computed through <i>n</i> = 13. Paper, slides, code and
+       data on <a href="gradprojects.html">Graduate Projects</a>.</p>
+
+    <h2>Markets:</h2>
+    <p>Full-time independent investor since May 2023, working in special-situations and thematic
+       equity, and directing a residential property renovation. Previously ran manual cross-DEX
+       arbitrage on Ethereum and VeChain through the 2020&ndash;2022 DeFi cycle. Ten-plus years
+       trading equities, options and crypto.</p>
+
+    <p>Competing in the Vanguard ETF Challenge, and registered for the Bloomberg Global Trading
+       Challenge. Research code on <a href="tradingprojects.html">Trading Projects</a>.</p>
+
     <h2>Links:</h2>
     <nav>
-      <ul class="link-list" style="display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 10px 0;">
-        <li style="margin: 0;"><a href="resume.pdf" target="_blank" rel="noopener noreferrer">Resume</a></li>
-	<li style="margin: 0;"><a href="CV.pdf" target="_blank" rel="noopener noreferrer">CV</a></li>
+      <ul class="link-list link-row">
+        <li><a href="resume.pdf" target="_blank" rel="noopener noreferrer">Resume</a></li>
+        <li><a href="CV.pdf" target="_blank" rel="noopener noreferrer">CV</a></li>
       </ul>
-      <ul class="link-list" style="display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 10px 0;">
-        <li style="margin: 0;"><a href="undergrad.html">Undergraduate Work Sample</a></li>
-        <li style="margin: 0;"><a href="grad.html">Graduate Work Sample</a></li>
+      <ul class="link-list link-row">
+        <li><a href="undergrad.html">Undergraduate Work Sample</a></li>
+        <li><a href="grad.html">Graduate Work Sample</a></li>
       </ul>
-      <ul class="link-list" style="display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 10px 0;">
-        <li style="margin: 0;"><a href="gradprojects.html">Graduate Projects</a></li>
-        <li style="margin: 0;"><a href="fun.html">Side Projects</a></li>
+      <ul class="link-list link-row">
+        <li><a href="gradprojects.html">Graduate Projects</a></li>
+        <li><a href="fun.html">Side Projects</a></li>
       </ul>
-      <ul class="link-list" style="display: flex; gap: 10px; flex-wrap: wrap; margin: 0;">
-        <li style="margin: 0;"><a href="tradingprojects.html">Trading Projects</a></li>
+      <ul class="link-list link-row">
+        <li><a href="tradingprojects.html">Trading Projects</a></li>
       </ul>
     </nav>
 
@@ -100,7 +124,7 @@
         <li>Rutgers Email: <a href="mailto:ajd295@scarletmail.rutgers.edu">ajd295@scarletmail.rutgers.edu</a></li>
         <li>Personal Email: <a href="mailto:austin908442@gmail.com">austin908442@gmail.com</a></li>
         <li><a href="https://www.linkedin.com/in/austin-decicco-300572229" target="_blank" rel="noopener noreferrer">
-            <img src="LinkedIn.png" alt="" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;">LinkedIn</a></li>
+            <img src="LinkedIn.png" alt="" class="inline-icon">LinkedIn</a></li>
       </ul>
     </address>
 

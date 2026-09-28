@@ -230,6 +230,45 @@ h5.course-title.section-label {
   margin: 10px 0;
 }
 
+.link-list.link-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 10px 0;
+}
+
+.link-list.link-row:last-of-type {
+  margin-bottom: 0;
+}
+
+.link-list.link-row li {
+  margin: 0;
+}
+
+
+/* ================================
+   INDEX PAGE — INTRO COLUMNS
+   Used only on index.html
+================================ */
+
+.intro-columns {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.intro-columns > div {
+  flex: 1;
+  min-width: 180px;
+}
+
+.inline-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
 
 /* ================================
    PROJECT CARDS
