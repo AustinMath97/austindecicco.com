@@ -12,7 +12,7 @@ local argsin, i, curl_out, oeis_json, parsed_value, searchstring, cmd;
 if nargs = 1 and type( args, 'list' ) then return procname( op( args ) ); end if;
 parsed_value := Array(1..0):
 if type( [ args ], 'list'('integer') ) = true and nargs < 6 or ( type( [ args ], 'list'('integer') ) = false and not type( [args], [string] ) ) then
-error "6 or more integers required; received", op( [ args ] );
+error "6 or more integers required, given as a sequence or a list; received %1", [args];
 elif type( [ args ], 'list'('integer') ) = true then
 argsin := :-map( :-convert, [ args ], ':-string' );
 searchstring := cat( argsin[1], seq( op( [",", argsin[i]] ), i = 2..numelems( argsin ) ) );
@@ -20,10 +20,10 @@ elif type( [args], [string] ) then
 argsin := [args];
 searchstring := StringTools:-SubstituteAll(op(argsin), " ", "%20");
 else
-error "in arguments, expected integer sequence or string; received", op( [ args ] );        
+error "6 or more integers required, given as a sequence or a list; received %1", [args];
 end if;
 cmd := cat("curl -s \"", URLpath, "search?fmt=json&q=", searchstring, "\""):
-curl_out := ssystem(cmd): if curl_out[1] <> 0 or curl_out[2] = "" then error "curl returned no data; check that curl is on the PATH and that oeis.org is reachable. Exit code:", curl_out[1]; end if: oeis_json := curl_out[2]:
+curl_out := ssystem(cmd): if curl_out[1] <> 0 or curl_out[2] = "" then error "could not reach oeis.org; check your internet connection and that curl is installed (curl exit code %1)", curl_out[1]; end if: oeis_json := curl_out[2]:
 parsed_value(1) := eval( JSON:-ParseString( oeis_json ) );
 if type(parsed_value[1][1]["number"],integer) then return parsed_value[1][1]["number"]; else return -1; end if;
 end proc:
