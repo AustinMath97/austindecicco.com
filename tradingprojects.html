@@ -25,153 +25,161 @@
 
     <p>Code and research tools built for trading competitions.</p>
 
-    <h4 class="course-title">Python Programs:</h4>
+    <section>
+      <h2>Unfinished Projects</h2>
 
-    <div class="project">
-      <a href="Trading Projects/vanguard.zip" download>Vanguard ETF Pairs Trading Research</a>
+      <h4 class="course-title">Python Programs:</h4>
 
-      <div class="project-desc">
+      <div class="project">
+        <a href="Trading Projects/vanguard.zip" download>Vanguard ETF Pairs Trading Research</a>
 
-        <p>
-          A Python research pipeline built for the 2026 Vanguard ETF Trading Challenge. It screens
-          every active Vanguard ETF for pairs whose price ratio reliably reverts, then backtests a
-          long-only rotation between the two funds in each pair. All output is PDF reports; nothing
-          connects to a broker or places orders.
-        </p>
+        <div class="project-desc">
 
-        <p>
-          The distinction driving the design: correlation says two funds move together,
-          cointegration says the gap between them comes back. Only the second is tradable, and the
-          two rarely agree &mdash; the most correlated pairs in this universe are usually the
-          <em>least</em> cointegrated, because near-identical index funds drift apart without ever
-          being pulled back.
-        </p>
+          <p>
+            A Python research pipeline built for the 2026 Vanguard ETF Trading Challenge. It screens
+            every active Vanguard ETF for pairs whose price ratio reliably reverts, then backtests a
+            long-only rotation between the two funds in each pair. All output is PDF reports; nothing
+            connects to a broker or places orders.
+          </p>
 
-        <p><strong>Method:</strong></p>
+          <p>
+            The distinction driving the design: correlation says two funds move together,
+            cointegration says the gap between them comes back. Only the second is tradable, and the
+            two rarely agree &mdash; the most correlated pairs in this universe are usually the
+            <em>least</em> cointegrated, because near-identical index funds drift apart without ever
+            being pulled back.
+          </p>
 
-        <ul>
-          <li><strong>Data:</strong> about 25 years of daily prices for 116 active Vanguard ETFs
-            from Yahoo Finance (yfinance), cached locally once per day.</li>
+          <p><strong>Method:</strong></p>
 
-          <li><strong>Ranking:</strong> pairs ranked by the correlation of daily returns (not price
-            levels) over a 252-trading-day lookback. Two funds that both trend up correlate at 0.99
-            on price levels whether or not they have anything to do with each other.</li>
+          <ul>
+            <li><strong>Data:</strong> about 25 years of daily prices for 116 active Vanguard ETFs
+              from Yahoo Finance (yfinance), cached locally once per day.</li>
 
-          <li><strong>Cointegration screen:</strong> Engle&ndash;Granger test on price levels. The
-            test is not symmetric, so it runs in both directions and the weaker of the two p-values
-            is the one reported; a pair passes only if that value is below 0.05. Pairs need at
-            least 200 shared trading days to be tested at all.</li>
+            <li><strong>Ranking:</strong> pairs ranked by the correlation of daily returns (not price
+              levels) over a 252-trading-day lookback. Two funds that both trend up correlate at 0.99
+              on price levels whether or not they have anything to do with each other.</li>
 
-          <li><strong>Signal:</strong> z-score of the price ratio A/B against its 100-day rolling
-            mean. Below &minus;2, buy A; above +2, buy B.</li>
+            <li><strong>Cointegration screen:</strong> Engle&ndash;Granger test on price levels. The
+              test is not symmetric, so it runs in both directions and the weaker of the two p-values
+              is the one reported; a pair passes only if that value is below 0.05. Pairs need at
+              least 200 shared trading days to be tested at all.</li>
 
-          <li><strong>Backtest:</strong> long-only (no shorting). Three exit rules are compared on
-            identical entries (z = 0, &plusmn;1, &plusmn;2), and signalling pairs are combined into
-            an equally weighted portfolio, rebalanced daily, against a buy-and-hold benchmark.</li>
+            <li><strong>Signal:</strong> z-score of the price ratio A/B against its 100-day rolling
+              mean. Below &minus;2, buy A; above +2, buy B.</li>
 
-          <li><strong>Caching:</strong> the day's download and the most recent cointegration screen
-            are both cached on disk, so a repeat run skips the downloads and the hundreds of
-            regressions behind the screen.</li>
-        </ul>
+            <li><strong>Backtest:</strong> long-only (no shorting). Three exit rules are compared on
+              identical entries (z = 0, &plusmn;1, &plusmn;2), and signalling pairs are combined into
+              an equally weighted portfolio, rebalanced daily, against a buy-and-hold benchmark.</li>
 
-        <p><strong>Reports:</strong></p>
+            <li><strong>Caching:</strong> the day's download and the most recent cointegration screen
+              are both cached on disk, so a repeat run skips the downloads and the hundreds of
+              regressions behind the screen.</li>
+          </ul>
 
-        <ul>
-          <li><strong>Correlation report:</strong> the most correlated pairs by daily return, each
-            with its rolling correlation across its full shared history, so a relationship that is
-            drifting is visible rather than averaged away.</li>
+          <p><strong>Reports:</strong></p>
 
-          <li><strong>Cointegration screen:</strong> every ranked pair tested, ordered by
-            significance rather than correlation. Pairs that pass get their prices, test statistics
-            and signal history charted.</li>
+          <ul>
+            <li><strong>Correlation report:</strong> the most correlated pairs by daily return, each
+              with its rolling correlation across its full shared history, so a relationship that is
+              drifting is visible rather than averaged away.</li>
 
-          <li><strong>Portfolio report:</strong> opens with what is actionable today &mdash; the
-            live signals and where each candidate sits relative to its trigger &mdash; then the
-            backtest under each exit rule, the portfolio equity curve against buy-and-hold, and a
-            page per pair.</li>
-        </ul>
+            <li><strong>Cointegration screen:</strong> every ranked pair tested, ordered by
+              significance rather than correlation. Pairs that pass get their prices, test statistics
+              and signal history charted.</li>
 
-        <p><strong>Folder contents:</strong></p>
+            <li><strong>Portfolio report:</strong> opens with what is actionable today &mdash; the
+              live signals and where each candidate sits relative to its trigger &mdash; then the
+              backtest under each exit rule, the portfolio equity curve against buy-and-hold, and a
+              page per pair.</li>
+          </ul>
 
-        <ul>
-          <li><code>RunDaily.py</code>: runs the full pipeline in order, each stage fed by the one
-            before it; the usual entry point.</li>
+          <p><strong>Folder contents:</strong></p>
 
-          <li><code>Vanguard.py</code>: the ETF universe of 116 tickers and the data layer
-            (download, daily cache, column extraction, gap reporting).</li>
+          <ul>
+            <li><code>RunDaily.py</code>: runs the full pipeline in order, each stage fed by the one
+              before it; the usual entry point.</li>
 
-          <li><code>VanguardStats.py</code>: aligned price/return tables and the correlation
-            matrices, on levels and on returns.</li>
+            <li><code>Vanguard.py</code>: the ETF universe of 116 tickers and the data layer
+              (download, daily cache, column extraction, gap reporting).</li>
 
-          <li><code>VanguardReporter.py</code>: correlation report (most correlated pairs and their
-            rolling correlation).</li>
+            <li><code>VanguardStats.py</code>: aligned price/return tables and the correlation
+              matrices, on levels and on returns.</li>
 
-          <li><code>VanguardPairsTrading.py</code>: the cointegration screen, ratio z-scores and
-            signal counts.</li>
+            <li><code>VanguardReporter.py</code>: correlation report (most correlated pairs and their
+              rolling correlation).</li>
 
-          <li><code>VanguardPairsPortfolio.py</code>: today's live signals, the backtest under each
-            exit rule, and the combined portfolio.</li>
+            <li><code>VanguardPairsTrading.py</code>: the cointegration screen, ratio z-scores and
+              signal counts.</li>
 
-          <li><code>VanguardPairReport.py</code>: a report for one pair on demand, e.g.
-            <code>python VanguardPairReport.py BIV VGIT</code>. It refuses a pair that isn't
-            cointegrated.</li>
+            <li><code>VanguardPairsPortfolio.py</code>: today's live signals, the backtest under each
+              exit rule, and the combined portfolio.</li>
 
-          <li><code>VanguardPlots.py</code>: rolling-correlation charts used by the reports.</li>
+            <li><code>VanguardPairReport.py</code>: a report for one pair on demand, e.g.
+              <code>python VanguardPairReport.py BIV VGIT</code>. It refuses a pair that isn't
+              cointegrated.</li>
 
-          <li><code>README.md</code>: full documentation, configuration and runtime notes.</li>
-        </ul>
+            <li><code>VanguardPlots.py</code>: rolling-correlation charts used by the reports.</li>
 
-        <p><strong>How to run:</strong></p>
+            <li><code>README.md</code>: full documentation, configuration and runtime notes.</li>
+          </ul>
 
-        <p>Install with <code>pip install pandas numpy yfinance matplotlib statsmodels scipy</code>,
-          then run <code>python RunDaily.py</code>. Requires Python 3.10+ (built and tested on
-          3.14). A full run takes under a minute after the first download; screening many more than
-          the default 150 pairs is what makes it slower, since each pair costs two regressions.</p>
+          <p><strong>How to run:</strong></p>
 
-        <p><strong>Limitations:</strong></p>
+          <p>Install with <code>pip install pandas numpy yfinance matplotlib statsmodels scipy</code>,
+            then run <code>python RunDaily.py</code>. Requires Python 3.10+ (built and tested on
+            3.14). A full run takes under a minute after the first download; screening many more than
+            the default 150 pairs is what makes it slower, since each pair costs two regressions.</p>
 
-        <ul>
-          <li>No transaction costs, spreads, slippage or taxes; every return is an upper bound, and
-            the strategy trades often enough for that to matter.</li>
+          <p><strong>Limitations:</strong></p>
 
-          <li>Multiple testing: screening many pairs at p &lt; 0.05 produces false positives by
-            chance; reported p-values are uncorrected.</li>
+          <ul>
+            <li>No transaction costs, spreads, slippage or taxes; every return is an upper bound, and
+              the strategy trades often enough for that to matter.</li>
 
-          <li>The rolling window supplies the mean reversion: re-centering every 100 days makes
-            even a non-stationary ratio produce plausible entries, so the cointegration test is the
-            only thing separating signal from noise.</li>
+            <li>Multiple testing: screening many pairs at p &lt; 0.05 produces false positives by
+              chance; reported p-values are uncorrected.</li>
 
-          <li>Adjusted prices are not traded prices. Adjusted close restates history at every
-            dividend, which can flip a cointegration verdict for bond funds, where most of the
-            return is income.</li>
+            <li>The rolling window supplies the mean reversion: re-centering every 100 days makes
+              even a non-stationary ratio produce plausible entries, so the cointegration test is the
+              only thing separating signal from noise.</li>
 
-          <li>Survivorship bias: the universe is currently active ETFs only.</li>
+            <li>Adjusted prices are not traded prices. Adjusted close restates history at every
+              dividend, which can flip a cointegration verdict for bond funds, where most of the
+              return is income.</li>
 
-          <li>Long-only: without shorting, each position carries the market risk of the fund it
-            holds rather than the spread.</li>
-        </ul>
+            <li>Survivorship bias: the universe is currently active ETFs only.</li>
 
-        <p><strong>Notes:</strong></p>
+            <li>Long-only: without shorting, each position carries the market risk of the fund it
+              holds rather than the spread.</li>
+          </ul>
 
-        <ul>
-          <li>Built with Claude (AI), starting from pairs-trading code from coursework, for the
-            competition.</li>
+          <p><strong>Notes:</strong></p>
 
-          <li><strong>Verified Working:</strong> 9/27/2026</li>
-        </ul>
+          <ul>
+            <li>Built with Claude (AI), starting from pairs-trading code from coursework, for the
+              competition.</li>
 
-        <div class="download-controls" style="margin-top: 8px;">
-          <a class="download-btn" href="Trading Projects/vanguard.zip" download>Download Project (.zip)</a>
+            <li>Unfinished. The screen reports uncorrected p-values, the backtest ignores
+              trading costs, and the ratio signal does not match the combination the
+              cointegration test actually prices. Each is a planned improvement.</li>
+
+            <li><strong>Verified Working:</strong> 9/27/2026</li>
+          </ul>
+
+          <div class="download-controls" style="margin-top: 8px;">
+            <a class="download-btn" href="Trading Projects/vanguard.zip" download>Download Project (.zip)</a>
+          </div>
+
         </div>
-
       </div>
-    </div>
+    </section>
 
   </main>
 
   <footer>
     <p>Built and Designed by Austin DeCicco</p>
-    <p>Last Updated: September 27, 2026</p>
+    <p>Last Updated: September 28, 2026</p>
   </footer>
 
 </body>
