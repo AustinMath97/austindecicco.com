@@ -62,11 +62,22 @@
           </p>
 
           <p>
-            The distinction driving the design: correlation says two funds move together,
-            cointegration says the gap between them comes back. Only the second is tradable, and the
-            two rarely agree &mdash; the most correlated pairs in this universe are usually the
-            <em>least</em> cointegrated, because near-identical index funds drift apart without ever
-            being pulled back.
+            The distinction driving the design: correlation measures whether two funds' returns
+            move together day to day; cointegration measures whether the gap between their prices
+            keeps coming back to a level. Neither implies the other &mdash; highly correlated
+            series need not be cointegrated, and cointegrated series can have low correlation
+            &mdash; so two funds can track each other closely and still drift apart permanently.
+            That is why the screen tests the price relationship rather than trusting the return
+            correlation.
+          </p>
+
+          <p>
+            Cointegration is not a prerequisite for pairs trading. The most replicated result in
+            the field, <a href="https://academic.oup.com/rfs/article-abstract/19/3/797/1646694"
+            target="_blank" rel="noopener noreferrer">Gatev, Goetzmann and Rouwenhorst (2006)</a>,
+            matches pairs by minimum distance between normalized prices, applies no cointegration
+            test at all, and reports average annualized excess returns of up to 11% over
+            1962&ndash;2002. Cointegration is the route taken here, not the only one that works.
           </p>
 
           <p><strong>Method:</strong></p>
@@ -75,9 +86,14 @@
             <li><strong>Data:</strong> about 25 years of daily prices for 116 active Vanguard ETFs
               from Yahoo Finance (yfinance), cached locally once per day.</li>
 
-            <li><strong>Ranking:</strong> pairs ranked by the correlation of daily returns (not price
-              levels) over a 252-trading-day lookback. Two funds that both trend up correlate at 0.99
-              on price levels whether or not they have anything to do with each other.</li>
+            <li><strong>Ranking:</strong> pairs ranked by the correlation of daily returns (not
+              price levels) over a 252-trading-day lookback. Correlations computed on the price
+              levels of trending series are unreliable rather than merely noisy:
+              <a href="https://www.sciencedirect.com/science/article/abs/pii/0304407674900347"
+              target="_blank" rel="noopener noreferrer">Granger and Newbold (1974)</a> showed that
+              regressing one random walk on an independent one produces apparently significant
+              relationships far more often than the nominal rate, so the level correlation between
+              two unrelated funds is close to arbitrary rather than reliably high.</li>
 
             <li><strong>Cointegration screen:</strong> Engle&ndash;Granger test on price levels. The
               test is not symmetric, so it runs in both directions and the weaker of the two p-values
@@ -157,15 +173,24 @@
               the strategy trades often enough for that to matter.</li>
 
             <li>Multiple testing: screening many pairs at p &lt; 0.05 produces false positives by
-              chance; reported p-values are uncorrected.</li>
+              chance, and the reported p-values are uncorrected. The set surviving a
+              Benjamini&ndash;Hochberg (1995) correction is much smaller.</li>
 
-            <li>The rolling window supplies the mean reversion: re-centering every 100 days makes
-              even a non-stationary ratio produce plausible entries, so the cointegration test is the
-              only thing separating signal from noise.</li>
+            <li>The rolling window supplies the mean reversion: subtracting a 100-day rolling mean
+              removes any slow trend by construction, so the z-score looks mean-reverting whether
+              or not the underlying ratio is stationary. The cointegration test runs on the
+              undetrended series and is the only thing separating signal from noise.</li>
 
             <li>Adjusted prices are not traded prices. Adjusted close restates history at every
-              dividend, which can flip a cointegration verdict for bond funds, where most of the
-              return is income.</li>
+              dividend, so a verdict on it need not match one on raw close, and the gap should be
+              widest for bond funds where most of the return is income. That is a reason to check
+              both, not a measured result.</li>
+
+            <li>The screen does not test what the strategy trades. Engle&ndash;Granger asks whether
+              <em>some</em> combination A &minus; &beta;B is stationary, with &beta; fitted to the
+              data; the signal trades the ratio A/B, which fixes that weight at one. A pair can pass
+              the screen at some &beta; far from one while the ratio actually held never reverts, so
+              the screen is more permissive than the trade requires.</li>
 
             <li>Long-only: without shorting, each position carries the market risk of the fund it
               holds rather than the spread.</li>
