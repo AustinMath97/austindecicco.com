@@ -63,12 +63,12 @@
 
           <p>
             The distinction driving the design: correlation measures whether two funds' returns
-            move together day to day; cointegration measures whether the gap between their prices
-            keeps coming back to a level. Neither implies the other &mdash; highly correlated
-            series need not be cointegrated, and cointegrated series can have low correlation
-            &mdash; so two funds can track each other closely and still drift apart permanently.
-            That is why the screen tests the price relationship rather than trusting the return
-            correlation.
+            move together day to day; cointegration measures whether some fixed combination of
+            their prices keeps returning to a level. Which combination is part of the claim, not a
+            detail &mdash; a pair can be cointegrated in one weighting and not in another. Neither
+            property implies the other: highly correlated series need not be cointegrated, and
+            cointegrated series can have low correlation, so two funds can track each other
+            closely and still drift apart permanently.
           </p>
 
           <p>
@@ -87,13 +87,18 @@
               from Yahoo Finance (yfinance), cached locally once per day.</li>
 
             <li><strong>Ranking:</strong> pairs ranked by the correlation of daily returns (not
-              price levels) over a 252-trading-day lookback. Correlations computed on the price
-              levels of trending series are unreliable rather than merely noisy:
+              price levels) over a 252-trading-day lookback. Correlation is not itself evidence of
+              a tradable relationship; it is used here as most of the literature uses it, to cut
+              the search space before the expensive test. The two-stage design is standard &mdash;
+              <a href="https://www.semanticscholar.org/paper/1742b86ccc578465bfb7fb0166fed7911950acd4"
+              target="_blank" rel="noopener noreferrer">Miao (2014)</a> ranks on correlation and
+              runs the cointegration test only on pairs above a 0.9 threshold, taking 15,576
+              candidates down to roughly 1,378 tested. Returns rather than price levels, because
+              a correlation computed on the levels of two trending series is close to arbitrary:
               <a href="https://www.sciencedirect.com/science/article/abs/pii/0304407674900347"
               target="_blank" rel="noopener noreferrer">Granger and Newbold (1974)</a> showed that
-              regressing one random walk on an independent one produces apparently significant
-              relationships far more often than the nominal rate, so the level correlation between
-              two unrelated funds is close to arbitrary rather than reliably high.</li>
+              regressing one random walk on an independent one yields apparently significant
+              relationships far more often than the nominal rate.</li>
 
             <li><strong>Cointegration screen:</strong> Engle&ndash;Granger test on price levels. The
               test is not symmetric, so it runs in both directions and the weaker of the two p-values
@@ -181,16 +186,16 @@
               or not the underlying ratio is stationary. The cointegration test runs on the
               undetrended series and is the only thing separating signal from noise.</li>
 
-            <li>The screen and the signal pull against each other. Engle&ndash;Granger runs on
-              price levels and asks whether A &minus; &beta;B is stationary for some fitted
-              &beta;. The signal trades A/B, which is stationary exactly when ln A &minus; ln B
-              is &mdash; unit weight on <em>log</em> prices, a different combination in a
-              different space. Dividing A &minus; &beta;B = c + u through by B gives
-              A/B = &beta; + (c + u)/B, so for trending funds the second term vanishes and the
-              ratio collapses toward &beta; rather than oscillating around it. The reverse fails
-              too: if A/B reverts to some c, then A &minus; B = (c &minus; 1)B + &hellip; inherits
-              B's trend. A pair the screen likes tends to be one whose traded spread is
-              shrinking.</li>
+            <li>The screen and the signal are not asking the same question. Engle&ndash;Granger
+              runs on price levels and asks whether A &minus; &beta;B is stationary for some
+              fitted &beta;. The signal trades A/B, which is stationary exactly when
+              ln A &minus; ln B is &mdash; unit weight on <em>log</em> prices, a different
+              combination in a different space. On trending series the two are close to
+              incompatible. If A &minus; &beta;B = c + u with u stationary, dividing through by B
+              gives A/B = &beta; + (c + u)/B, and the second term vanishes as B grows: the ratio
+              converges to &beta; instead of oscillating around it. Conversely if A/B = c + v with
+              v stationary, then A &minus; &beta;B = (c &minus; &beta;)B + vB for every &beta;,
+              and vB has variance growing with B&sup2;, so no weighting is stationary.</li>
 
             <li>Long-only: without shorting, each position carries the market risk of the fund it
               holds rather than the spread.</li>
