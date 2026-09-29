@@ -55,83 +55,74 @@
         <div class="project-desc">
 
           <p>
-            A Python research pipeline built for the 2026 Vanguard ETF Trading Challenge. It screens
-            every active Vanguard ETF for pairs whose price ratio reliably reverts, then backtests a
-            long-only rotation between the two funds in each pair. All output is PDF reports; nothing
-            connects to a broker or places orders.
+            A Python research pipeline built for the 2026 Vanguard ETF Trading Challenge. It
+            screens every active Vanguard ETF for pairs whose price ratio reverts, then backtests
+            a long-only rotation between the two funds. Output is PDF reports; nothing connects to
+            a broker.
           </p>
 
           <p>
-            The distinction driving the design: correlation measures whether two funds' returns
-            move together day to day; cointegration measures whether some fixed combination of
-            their prices keeps returning to a level. Which combination is part of the claim, not a
-            detail &mdash; a pair can be cointegrated in one weighting and not in another. Neither
-            property implies the other: highly correlated series need not be cointegrated, and
-            cointegrated series can have low correlation, so two funds can track each other
-            closely and still drift apart permanently.
+            Correlation measures whether two funds' returns move together day to day.
+            Cointegration measures whether some fixed combination of their prices returns to a
+            level &mdash; and which combination is part of the claim, not a detail. Neither
+            implies the other, so two funds can track each other closely and still drift apart for
+            good.
           </p>
 
           <p>
-            Cointegration is not a prerequisite for pairs trading. The most replicated result in
-            the field, <a href="https://academic.oup.com/rfs/article-abstract/19/3/797/1646694"
-            target="_blank" rel="noopener noreferrer">Gatev, Goetzmann and Rouwenhorst (2006)</a>,
-            matches pairs by minimum distance between normalized prices, applies no cointegration
-            test at all, and reports average annualized excess returns of up to 11% over
-            1962&ndash;2002. Cointegration is the route taken here, not the only one that works.
+            Cointegration is not a prerequisite for pairs trading.
+            <a href="https://academic.oup.com/rfs/article-abstract/19/3/797/1646694" target="_blank" rel="noopener noreferrer">Gatev, Goetzmann and
+            Rouwenhorst (2006)</a> match pairs by distance between normalized prices, use no
+            cointegration test, and report up to 11% annualized excess returns over
+            1962&ndash;2002. It is the route taken here, not the only one.
           </p>
 
           <p><strong>Method:</strong></p>
 
           <ul>
             <li><strong>Data:</strong> about 25 years of daily prices for 116 active Vanguard ETFs
-              from Yahoo Finance (yfinance), cached locally once per day.</li>
+              from Yahoo Finance, cached once a day.</li>
 
-            <li><strong>Ranking:</strong> pairs ranked by the correlation of daily returns (not
-              price levels) over a 252-trading-day lookback. Correlation is not itself evidence of
-              a tradable relationship; it is used here as most of the literature uses it, to cut
-              the search space before the expensive test. The two-stage design is standard &mdash;
-              <a href="https://www.semanticscholar.org/paper/1742b86ccc578465bfb7fb0166fed7911950acd4"
-              target="_blank" rel="noopener noreferrer">Miao (2014)</a> ranks on correlation and
-              runs the cointegration test only on pairs above a 0.9 threshold, taking 15,576
-              candidates down to roughly 1,378 tested. Returns rather than price levels, because
-              a correlation computed on the levels of two trending series is close to arbitrary:
-              <a href="https://www.sciencedirect.com/science/article/abs/pii/0304407674900347"
-              target="_blank" rel="noopener noreferrer">Granger and Newbold (1974)</a> showed that
-              regressing one random walk on an independent one yields apparently significant
-              relationships far more often than the nominal rate.</li>
+            <li><strong>Ranking:</strong> the Pearson correlation of daily percent changes over the
+              trailing 252 days is computed for every pair, and the 150 highest go to the test.
+              Correlation is a way to cut the search space, not evidence of a tradable
+              relationship; the two-stage design is standard, and
+              <a href="https://www.semanticscholar.org/paper/1742b86ccc578465bfb7fb0166fed7911950acd4" target="_blank" rel="noopener noreferrer">Miao (2014)</a> tests only
+              pairs above 0.9, cutting 15,576 candidates to about 1,378. Returns rather than price
+              levels, because a level correlation between two trending series is close to
+              arbitrary (<a href="https://www.sciencedirect.com/science/article/abs/pii/0304407674900347" target="_blank" rel="noopener noreferrer">Granger and
+              Newbold 1974</a>). Note the windows differ: the filter sees one year, the test then
+              uses the full shared history.</li>
 
-            <li><strong>Cointegration screen:</strong> Engle&ndash;Granger test on price levels. The
-              test is not symmetric, so it runs in both directions and the weaker of the two p-values
-              is the one reported; a pair passes only if that value is below 0.05. Pairs need at
-              least 200 shared trading days to be tested at all.</li>
+            <li><strong>Cointegration screen:</strong> Engle&ndash;Granger on price levels. The test
+              is not symmetric, so it runs both ways and a pair passes only if the weaker p-value
+              is below 0.05. Minimum 200 shared trading days.</li>
 
-            <li><strong>Signal:</strong> z-score of the price ratio A/B against its 100-day rolling
-              mean. Below &minus;2, buy A; above +2, buy B.</li>
+            <li><strong>Signal:</strong> z-score of the ratio A/B against its 100-day rolling mean.
+              Below &minus;2 buy A, above +2 buy B.</li>
 
-            <li><strong>Backtest:</strong> long-only (no shorting). Three exit rules are compared on
-              identical entries (z = 0, &plusmn;1, &plusmn;2), and signalling pairs are combined into
-              an equally weighted portfolio, rebalanced daily, against a buy-and-hold benchmark.</li>
+            <li><strong>Backtest:</strong> long-only. Three exit rules on identical entries
+              (z = 0, &plusmn;1, &plusmn;2), signalling pairs combined equally weighted and
+              rebalanced daily against buy-and-hold.</li>
 
-            <li><strong>Caching:</strong> the day's download and the most recent cointegration screen
-              are both cached on disk, so a repeat run skips the downloads and the hundreds of
-              regressions behind the screen.</li>
+            <li><strong>Caching:</strong> the day's download and the last screen are both cached, so
+              a repeat run skips the downloads and the regressions.</li>
           </ul>
 
           <p><strong>Reports:</strong></p>
 
           <ul>
             <li><strong>Correlation report:</strong> the most correlated pairs by daily return, each
-              with its rolling correlation across its full shared history, so a relationship that is
-              drifting is visible rather than averaged away.</li>
+              with its rolling correlation over its full shared history, so a drifting relationship
+              is visible rather than averaged away.</li>
 
             <li><strong>Cointegration screen:</strong> every ranked pair tested, ordered by
-              significance rather than correlation. Pairs that pass get their prices, test statistics
-              and signal history charted.</li>
+              significance. Pairs that pass get their prices, statistics and signal history
+              charted.</li>
 
-            <li><strong>Portfolio report:</strong> opens with what is actionable today &mdash; the
-              live signals and where each candidate sits relative to its trigger &mdash; then the
-              backtest under each exit rule, the portfolio equity curve against buy-and-hold, and a
-              page per pair.</li>
+            <li><strong>Portfolio report:</strong> today's live signals and where each candidate
+              sits relative to its trigger, then the backtest under each exit rule, the equity
+              curve against buy-and-hold, and a page per pair.</li>
           </ul>
 
           <p><strong>Folder contents:</strong></p>
@@ -174,31 +165,28 @@
           <p><strong>Limitations:</strong></p>
 
           <ul>
-            <li>No transaction costs, spreads, slippage or taxes; every return is an upper bound, and
-              the strategy trades often enough for that to matter.</li>
+            <li>No costs, spreads, slippage or taxes, so every return is an upper bound.</li>
 
-            <li>Multiple testing: screening many pairs at p &lt; 0.05 produces false positives by
-              chance, and the reported p-values are uncorrected. The set surviving a
+            <li>Multiple testing: many pairs screened at p &lt; 0.05 yields false positives by
+              chance, and the p-values are uncorrected. The set surviving a
               Benjamini&ndash;Hochberg (1995) correction is much smaller.</li>
 
-            <li>The rolling window supplies the mean reversion: subtracting a 100-day rolling mean
+            <li>The rolling window supplies the mean reversion. Subtracting a 100-day rolling mean
               removes any slow trend by construction, so the z-score looks mean-reverting whether
-              or not the underlying ratio is stationary. The cointegration test runs on the
-              undetrended series and is the only thing separating signal from noise.</li>
+              or not the ratio is. Only the cointegration test, which runs on the undetrended
+              series, separates signal from noise.</li>
 
-            <li>The screen and the signal are not asking the same question. Engle&ndash;Granger
-              runs on price levels and asks whether A &minus; &beta;B is stationary for some
-              fitted &beta;. The signal trades A/B, which is stationary exactly when
-              ln A &minus; ln B is &mdash; unit weight on <em>log</em> prices, a different
-              combination in a different space. On trending series the two are close to
-              incompatible. If A &minus; &beta;B = c + u with u stationary, dividing through by B
-              gives A/B = &beta; + (c + u)/B, and the second term vanishes as B grows: the ratio
-              converges to &beta; instead of oscillating around it. Conversely if A/B = c + v with
-              v stationary, then A &minus; &beta;B = (c &minus; &beta;)B + vB for every &beta;,
-              and vB has variance growing with B&sup2;, so no weighting is stationary.</li>
+            <li>The screen and the signal ask different questions. Engle&ndash;Granger works in
+              price levels: is A &minus; &beta;B stationary for some fitted &beta;? The signal
+              trades A/B, which is stationary exactly when ln A &minus; ln B is &mdash; unit weight
+              on <em>log</em> prices. On trending series the two are near-incompatible. If
+              A &minus; &beta;B = c + u with u stationary, then A/B = &beta; + (c + u)/B, which
+              converges to &beta; as B grows rather than oscillating around it. Conversely if
+              A/B = c + v with v stationary, then A &minus; &beta;B = (c &minus; &beta;)B + vB for
+              every &beta;, and vB has variance growing with B&sup2;.</li>
 
-            <li>Long-only: without shorting, each position carries the market risk of the fund it
-              holds rather than the spread.</li>
+            <li>Long-only: each position carries the market risk of the fund it holds, not the
+              spread.</li>
           </ul>
 
           <p><strong>Notes:</strong></p>
