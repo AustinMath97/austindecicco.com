@@ -181,16 +181,16 @@
               or not the underlying ratio is stationary. The cointegration test runs on the
               undetrended series and is the only thing separating signal from noise.</li>
 
-            <li>Adjusted prices are not traded prices. Adjusted close restates history at every
-              dividend, so a verdict on it need not match one on raw close, and the gap should be
-              widest for bond funds where most of the return is income. That is a reason to check
-              both, not a measured result.</li>
-
-            <li>The screen does not test what the strategy trades. Engle&ndash;Granger asks whether
-              <em>some</em> combination A &minus; &beta;B is stationary, with &beta; fitted to the
-              data; the signal trades the ratio A/B, which fixes that weight at one. A pair can pass
-              the screen at some &beta; far from one while the ratio actually held never reverts, so
-              the screen is more permissive than the trade requires.</li>
+            <li>The screen and the signal pull against each other. Engle&ndash;Granger runs on
+              price levels and asks whether A &minus; &beta;B is stationary for some fitted
+              &beta;. The signal trades A/B, which is stationary exactly when ln A &minus; ln B
+              is &mdash; unit weight on <em>log</em> prices, a different combination in a
+              different space. Dividing A &minus; &beta;B = c + u through by B gives
+              A/B = &beta; + (c + u)/B, so for trending funds the second term vanishes and the
+              ratio collapses toward &beta; rather than oscillating around it. The reverse fails
+              too: if A/B reverts to some c, then A &minus; B = (c &minus; 1)B + &hellip; inherits
+              B's trend. A pair the screen likes tends to be one whose traded spread is
+              shrinking.</li>
 
             <li>Long-only: without shorting, each position carries the market risk of the fund it
               holds rather than the spread.</li>
