@@ -1,0 +1,6 @@
+# Working copy of the It's a Metric, Too project.
+# The only part of it that belongs on the site is the published archive at
+# "Side Projects/ItsAMetricToo.zip", which is committed separately.
+# Everything below stays local: ItsAMetricToo/private/ holds the puzzle's
+# solution and must never reach GitHub or the live site.
+ItsAMetricToo/
