@@ -33,7 +33,7 @@
    Applies to all pages
 ================================ */
 
-/* Always reserve the scrollbar so short pages (e.g. undergrad.html) get the
+/* Always reserve the scrollbar so short pages (e.g. a course file page) get the
    same viewport width as long ones; otherwise the fixed "cover" background
    is scaled differently and looks zoomed in. */
 html {
@@ -151,8 +151,8 @@ address {
 
 /* ================================
    COURSE / SECTION HEADINGS
-   Used on grad.html, undergrad.html,
-   fun.html, gradprojects.html
+   Used on coursehistory.html, course file
+   pages, fun.html, gradprojects.html
 ================================ */
 
 h4.course-title,
@@ -177,7 +177,7 @@ h5.course-title.section-label {
 
 /* ================================
    EDUCATION ENTRIES
-   Used on grad.html and undergrad.html
+   Used on coursehistory.html and course file pages
 ================================ */
 
 .edu-entry h2 {
@@ -189,6 +189,85 @@ h5.course-title.section-label {
   font-weight: normal;
   font-size: 1em;
   color: var(--color-text-muted);
+}
+
+
+/* ================================
+   COURSE HISTORY — COURSE LIST
+   Used only on coursehistory.html
+================================ */
+
+.course-count {
+  color: var(--color-text-muted);
+}
+
+.jump-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin-bottom: 8px;
+}
+
+.course-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 4px 0 12px 0;
+}
+
+/* Each course: the number, then a block with the name, instructor, status and
+   file link, then the short description on its own line. The grid keeps a
+   wrapped name beside its number rather than dropping it underneath. */
+.course-list > li {
+  display: grid;
+  grid-template-columns: minmax(6em, max-content) 1fr;
+  align-items: baseline;
+  column-gap: 8px;
+  padding: 5px 0;
+}
+
+.course-num {
+  font-size: 0.9em;
+  color: var(--color-text-muted);
+}
+
+.course-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 10px;
+}
+
+.course-name {
+  font-weight: bold;
+}
+
+.course-instructor,
+.course-inst {
+  font-size: 0.95em;
+  color: var(--color-text-muted);
+}
+
+.course-inst,
+.course-link {
+  margin-left: auto;
+}
+
+.course-link {
+  font-size: 0.9em;
+}
+
+.course-status {
+  padding: 0 6px;
+  border: 1px solid var(--color-accent);
+  border-radius: 10px;
+  font-size: 0.75em;
+  color: var(--color-accent);
+}
+
+.course-short {
+  grid-column: 1 / -1;
+  font-size: 0.95em;
+  color: #444;
 }
 
 
@@ -248,7 +327,7 @@ h5.course-title.section-label {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
-  margin: 0 0 10px 0;
+  margin: 20px 0 10px 0;
 }
 
 .link-list.link-row:last-of-type {
@@ -348,7 +427,7 @@ img.contact-icon {
 
 /* ================================
    DATASET DROPDOWN
-   Used only on gradprojects.html
+   Used on gradprojects.html and experimentalmath.html
 ================================ */
 
 .dataset-dropdown {
