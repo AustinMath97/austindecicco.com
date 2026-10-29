@@ -276,6 +276,10 @@ h5.course-title.section-label {
   min-width: 180px;
 }
 
+.intro-columns > div:last-child {
+  flex: 0 0 auto;
+}
+
 
 /* ================================
    INDEX PAGE — CONTACT ROW
@@ -467,6 +471,14 @@ img.contact-icon {
 
   .contact-row {
     justify-content: center;
+  }
+
+  .intro-columns {
+    row-gap: 0;
+  }
+
+  .intro-columns > div:last-child {
+    flex-basis: 100%;
   }
 }
 
