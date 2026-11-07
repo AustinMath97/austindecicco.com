@@ -361,6 +361,41 @@ h5.course-title.section-label {
 
 
 /* ================================
+   INDEX PAGE — RESEARCH & PROJECTS
+   Used only on index.html
+================================ */
+
+.cv-entry {
+  margin: 14px 0;
+}
+
+.cv-entry h3 {
+  margin: 0;
+  font-size: 1.05em;
+}
+
+/* Italic sub-lines. A second span (the date) sits at the right and
+   drops below the first on narrow screens. */
+.cv-line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  column-gap: 16px;
+  margin: 0;
+  font-style: italic;
+}
+
+.cv-entry ul {
+  margin: 2px 0 0 0;
+  padding-left: 1.25em;
+}
+
+.cv-entry li {
+  list-style-type: "\2013\00a0\00a0";
+}
+
+
+/* ================================
    INDEX PAGE — CONTACT ROW
    Used only on index.html
 ================================ */
